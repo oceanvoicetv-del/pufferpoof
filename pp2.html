@@ -1,0 +1,1148 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Puffer Poof - Level 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0c4a6e; /* Deep ocean blue */
+            color: #f0f9ff;
+            font-family: 'Bangers', cursive;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #gameWrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        canvas {
+            display: block;
+            /* Level 2 Aesthetic: Deeper, darker water */
+            background: linear-gradient(to bottom, #06b6d4, #083344, #030712);
+            width: 100%;
+            height: 100%;
+        }
+        /* --- UNIFIED LOGO/MODAL STYLES --- */
+        #startModal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 400px;
+            z-index: 100;
+        }
+        @keyframes subtleBob {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes subtleBobOOF {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes pulseGlow {
+            0% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; }
+            50% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 20px #fde047; }
+            100% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; }
+        }
+        @keyframes animatedBackground {
+            from { background-position: 0% 50%; }
+            to { background-position: 100% 50%; }
+        }
+        @keyframes dolphinSwim {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 100px)); }
+        }
+        .modal-inner {
+            background: linear-gradient(
+                -45deg,
+                #0369a1, /* base */
+                #075985, /* mid */
+                #0c4a6e, /* dark */
+                #075985, /* mid */
+                #0369a1 /* base */
+            );
+            background-size: 400% 400%;
+            animation: animatedBackground 15s ease infinite;
+            border: 4px solid #f0f9ff;
+            border-radius: 1.5rem;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: relative; /* For particle canvas */
+            overflow: hidden; /* Clip particles */
+        }
+        #particleCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .modal-content {
+            position: relative;
+            z-index: 2; /* Content sits above particles */
+        }
+        .baseline-text {
+            font-size: 6.8rem; /* v38 Calibrated */
+            line-height: 0.8;
+            letter-spacing: -0.025em;
+            transform: scale(1.1, 1);
+        }
+        .modal-content h1 {
+            color: #fde047;
+            margin: 0;
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+        #poof-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -1.5rem;
+        }
+        .logo-p-container {
+            position: relative;
+            width: 100px;
+            height: 115px;
+            margin-right: -30px;
+            z-index: 10;
+            animation: subtleBob 4s ease-in-out infinite;
+        }
+        .logo-p-svg {
+            width: 100px;
+            height: 115px;
+        }
+        #logoPuffer {
+            position: absolute;
+            width: 58px;
+            height: 58px;
+            top: 25px;
+            left: 28px;
+            z-index: 5;
+        }
+        .oof-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 8px;
+            animation: subtleBobOOF 3.8s ease-in-out infinite;
+        }
+        .logo-o {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 4px -4px 8px rgba(255,255,255,0.3);
+            position: relative;
+        }
+        .logo-o::after {
+            content: '';
+            position: absolute;
+            bottom: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 16px;
+            background: white;
+            opacity: 0.7;
+        }
+        .logo-f-container {
+            width: 75px;
+            height: 115px;
+            margin-left: -15px;
+            animation: subtleBobOOF 3.8s ease-in-out infinite;
+            animation-delay: -0.1s;
+        }
+        .logo-f-svg {
+            width: 75px;
+            height: 115px;
+        }
+        #startButton {
+            font-family: 'Bangers', cursive;
+            font-size: 2.5rem;
+            letter-spacing: 0.05em;
+            color: #082f49;
+            background: #fde047;
+            border: 3px solid #082f49;
+            border-radius: 1rem;
+            padding: 0.5rem 2.5rem;
+            margin-top: 1rem;
+            box-shadow: 0 5px 0 #facc15, 0 8px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s ease-out;
+            cursor: pointer;
+        }
+        #startButton:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #facc15, 0 5px 5px rgba(0,0,0,0.3);
+        }
+
+
+        /* --- IN-GAME UI --- */
+        #uiLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #scoreDisplay {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.5rem;
+            color: white;
+            text-shadow: 3px 3px 0 #082f49;
+        }
+        #levelCompleteModal, #paywallModal {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(3, 105, 161, 0.9);
+            border: 4px solid #f0f9ff;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 380px;
+            z-index: 200;
+            pointer-events: all;
+        }
+        .modal-title {
+            font-size: 4rem;
+            color: #fde047;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.4);
+            margin: 0 0 1rem 0;
+            line-height: 1;
+        }
+        .modal-text {
+            font-size: 1.5rem;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            margin-bottom: 1.5rem;
+        }
+        .modal-button {
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            letter-spacing: 0.05em;
+            color: #082f49;
+            background: #fde047;
+            border: 3px solid #082f49;
+            border-radius: 1rem;
+            padding: 0.5rem 1.5rem;
+            box-shadow: 0 5px 0 #facc15, 0 8px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s ease-out;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        #muteButton {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 2rem;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            z-index: 11;
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #puffTimer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 300px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid white;
+            border-radius: 10px;
+            display: none; /* Hidden by default */
+        }
+        #puffTimerBar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #f472b6, #ec4899);
+            border-radius: 7px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div id="gameWrapper">
+        <!-- The Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+
+        <!-- In-Game UI Elements -->
+        <div id="uiLayer">
+            <div id="scoreDisplay">0</div>
+            <div id="puffTimer">
+                <div id="puffTimerBar"></div>
+            </div>
+            <!-- Level Complete Modal -->
+            <div id="levelCompleteModal">
+                <!-- Updated for Level 2 -->
+                <h2 class="modal-title">LEVEL 2<br>COMPLETE!</h2>
+                <!-- === REVISED PASSIVE TEXT HERE === -->
+                <p class="modal-text">Your first two stages are complete! Unlock the full ocean story and help Puffer Poof continue his journey.</p>
+                <a href="#" class="modal-button" id="nextLevelButton">Get the Ocean Story Pass (\$0.99)</a>
+            </div>
+            <!-- Paywall Modal (for Lvl 3) -->
+            <div id="paywallModal">
+                <!-- Content for this is in the Lvl 3 file -->
+            </div>
+        </div>
+
+
+        <!-- Mute Button -->
+        <button id="muteButton">🔊</button>
+        
+        <!-- The Unified Start Modal -->
+        <div id="startModal">
+            <div class="modal-inner">
+                <canvas id="particleCanvas"></canvas>
+                <div class="modal-content">
+                    <!-- Logo -->
+                    <h1 class="baseline-text">PUFFER</h1>
+                    <div id="poof-line">
+                        <!-- P Container -->
+                        <div class="logo-p-container">
+                            <!-- "Bangers" <text> engine with fixed viewBox -->
+                            <svg id="logoPSVG" class="logo-p-svg" viewBox="10 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <radialGradient id="tridentGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                                        <stop offset="0%" style="stop-color:#fde047; stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#facc15; stop-opacity:1" />
+                                    </radialGradient>
+                                </defs>
+                                <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round"
+                                >
+                                    P
+                                </text>
+                            </svg>
+                            <img src="" id="logoPuffer" alt="Puffer">
+                        </div>
+                        <!-- OOF Container -->
+                        <div class="oof-container">
+                            <div class="logo-o" style="background-color: #f472b6; margin-right: -8px; z-index: 2; animation-delay: -0.2s;"></div>
+                            <div class="logo-o" style="background-color: #3b82f6; z-index: 1;"></div>
+                            <!-- "Bangers" <text> engine for "F" with fixed viewBox -->
+                            <div class="logo-f-container">
+                                <svg class="logo-f-svg" viewBox="10 0 70 110" xmlns="http://www.w3.org/2000/svg">
+                                    <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round"
+                                    >
+                                        F
+                                    </text>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- === NEW LEVEL INDICATOR === -->
+                    <h2 style="font-family: 'Bangers', cursive; font-size: 2.5rem; color: #38bdf8; text-shadow: 3px 3px 0 #075985; margin-top: 1rem; margin-bottom: 0;">STAGE 2</h2>
+                    <!-- === END NEW LEVEL INDICATOR === -->
+
+
+                    <!-- === Instructions === -->
+                    <div id="instructions" style="color: white; text-align: left; padding: 0 1.5rem; margin-top: 1.5rem; font-family: sans-serif; letter-spacing: 0.05em; font-size: 1rem; line-height: 1.4; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                        <h3 style="font-family: 'Bangers', cursive; font-size: 2rem; color: #fde047; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.025em;">How to Play</h3>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.2rem; margin-right: 0.75rem; width: 25px; text-align: center;">🌸</span>
+                                <span>Eat <strong>Flowers</strong> to get Puffed.</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.2rem; margin-right: 0.75rem; width: 25px; text-align: center;">⭐</span>
+                                <span>Eat <strong>Stars</strong> for <strong>full movement</strong>.</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.2rem; margin-right: 0.75rem; width: 25px; text-align: center;">💥</span>
+                                <span>Pop Bubbles when Puffed <strong>OR</strong> Starry.</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.2rem; margin-right: 0.75rem; width: 25px; text-align: center;">🎈</span>
+                                <span><strong>NEVER</strong> touch <strong>Red Balloons!</strong></span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.2rem; margin-right: 0.75rem; width: 25px; text-align: center;">🐬</span>
+                                <span>Avoid <strong>Dolphins</strong> when in Star Mode.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- === END: Instructions === -->
+
+
+
+
+                    <!-- Start Button -->
+                    <button id="startButton">Start Game</button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <script>
+        // --- Core Game Setup ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth, canvasHeight;
+
+
+        // --- Game State ---
+        let gameRunning = false;
+        let score = 0;
+        let isMuted = false;
+        const CURRENT_LEVEL = 2; // Updated for Stage 2
+        const LEVEL_COMPLETE_SCORE = 25; // Updated goal for Stage 2
+
+
+        // --- === Level 2 Settings (Incremental Difficulty) === ---
+        const LEVEL_SETTINGS = {
+            bubbleSpeed: 0.8,         // SLIGHTLY FASTER (was 0.6)
+            redBalloonSpeed: 1.2,     // SLIGHTLY FASTER (was 0.8)
+            powerUpSpeed: 1.0,        // SLIGHTLY FASTER (was 0.7)
+            bubbleSpawnRate: 100,     // FASTER SPAWN (was 130)
+            redBalloonSpawnRate: 140, // FASTER SPAWN (was 180)
+            powerUpSpawnRate: 300,
+            dolphinSpawnRate: 300
+        };
+
+
+        // --- Player State ---
+        let player = {
+            x: 0,
+            y: 0,
+            targetX: 0,
+            radius: 20,
+            isPuffed: false,
+            puffTimer: 0,
+            puffDuration: 7000, // 7 seconds
+            hasMuffler: false, // This is "Star Mode"
+            mufflerTimer: 0,
+            mufflerDuration: 10000,
+            targetY: 0,
+            baseY: 0,
+            lerpFactor: 0.2
+        };
+
+
+        // --- Game Objects ---
+        let bubbles = []; 
+        let redBalloons = []; 
+        let powerUps = []; // 0: Flower, 1: Star
+        let dolphins = [];
+        let particles = [];
+        let frame = 0;
+
+
+        // --- DOM Elements ---
+        const startModal = document.getElementById('startModal');
+        const startButton = document.getElementById('startButton');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const muteButton = document.getElementById('muteButton');
+        const puffTimer = document.getElementById('puffTimer');
+        const puffTimerBar = document.getElementById('puffTimerBar');
+        const levelCompleteModal = document.getElementById('levelCompleteModal');
+        const nextLevelButton = document.getElementById('nextLevelButton');
+        const logoPuffer = document.getElementById('logoPuffer');
+
+
+        // --- Audio ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function createSound(type, freq, duration) {
+            if (!audioCtx || isMuted) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+
+            if (type === 'sawtooth') {
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(freq / 4, audioCtx.currentTime + duration);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            } else if (type === 'triangle') {
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration * 0.5);
+                oscillator.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + duration);
+            } else {
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            }
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+        const playPopSound = () => createSound('sine', 440, 0.1);
+        const playMineSound = () => createSound('sawtooth', 220, 0.5);
+        const playPowerUpSound = () => createSound('triangle', 660, 0.2);
+        const playLevelWinSound = () => {
+            createSound('sine', 523, 0.1);
+            setTimeout(() => createSound('sine', 659, 0.1), 100);
+            setTimeout(() => createSound('sine', 784, 0.1), 200);
+            setTimeout(() => createSound('sine', 1046, 0.2), 300);
+        };
+
+
+        // --- SVG Player Sprites ---
+        const playerSVG = (isPuffed, hasMuffler) => {
+            const bodyRadius = isPuffed ? 11 : 8;
+            const bodyColor = "#facc15";
+            const bodyStroke = "#082f49";
+            const eyeRadius = isPuffed ? 5 : 3;
+            const pupilRadius = isPuffed ? 2.5 : 1.5;
+
+
+            let spikes = '';
+            const spikeLength = isPuffed ? 6 : 1;
+            const spikeWidth = isPuffed ? 2.5 : 1.5;
+
+
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * 2 * Math.PI;
+                const x1 = 12 + Math.cos(angle) * (bodyRadius - 1);
+                const y1 = 13 + Math.sin(angle) * (bodyRadius - 1);
+                const x2 = 12 + Math.cos(angle) * (bodyRadius + spikeLength);
+                const y2 = 13 + Math.sin(angle) * (bodyRadius + spikeLength);
+                spikes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f97316" stroke-width="${spikeWidth}" stroke-linecap="round"/>`;
+            }
+
+
+            const mufflerStar = hasMuffler ? `<path d="M 4 10 L 6 6 L 2 4 L 7 4 L 8 0 L 9 4 L 14 4 L 10 6 L 12 10 L 8 7 Z" fill="#ec4899" stroke="#9d174d" transform="translate(4, 15) scale(0.6)"/>` : '';
+
+
+            return `
+                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+                    <defs>
+                        <radialGradient id="pufferGradientGame" cx="50%" cy="50%" r="50%" fx="70%" fy="70%">
+                            <stop offset="0%" style="stop-color:#fef08a; stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:${bodyColor}; stop-opacity:1" />
+                        </radialGradient>
+                    </defs>
+                    <g>
+                        ${spikes}
+                        ${mufflerStar}
+                        <circle cx="12" cy="13" r="${bodyRadius}" fill="url(#pufferGradientGame)" stroke="${bodyStroke}" stroke-linejoin="round"/>
+                        <ellipse cx="6" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(-20 6 13)"/>
+                        <ellipse cx="18" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(20 18 13)"/>
+                        <path d="M10.5 15C10.5 15 11 15.5 12 15.5C13 15.5 13.5 15 13.5 15" stroke="${bodyStroke}" stroke-linecap="round"/>
+                        <circle cx="14.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="14.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" />
+                        <circle cx="9.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="9.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" />
+                    </g>
+                </svg>`;
+        }
+        const playerImageNormal = new Image();
+        playerImageNormal.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, false))}`;
+        const playerImagePuffed = new Image();
+        playerImagePuffed.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, false))}`;
+        const playerImageMuffler = new Image();
+        playerImageMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, true))}`;
+        const playerImagePuffedMuffler = new Image();
+        playerImagePuffedMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, true))}`;
+        logoPuffer.src = playerImageNormal.src;
+
+
+        // --- Item SVGs ---
+        const bubbleSVG = () => `
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="bubbleGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                        <stop offset="0%" style="stop-color:rgba(255,255,255,0.7); stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:rgba(255,255,255,0); stop-opacity:1" />
+                    </radialGradient>
+                </defs>
+                <circle cx="20" cy="20" r="18" fill="rgba(200, 230, 255, 0.4)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/>
+                <circle cx="20" cy="20" r="18" fill="url(#bubbleGrad)"/>
+                <path d="M 12 12 C 15 14, 20 18, 22 22 C 21 16, 16 12, 12 12 Z" fill="rgba(255, 255, 255, 0.7)" />
+            </svg>`;
+        const bubbleImage = new Image();
+        bubbleImage.src = `data:image/svg+xml;base64,${btoa(bubbleSVG())}`;
+
+
+        const redBalloonSVG = () => `
+            <svg width="40" height="48" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="redBalloonGrad" cx="50%" cy="40%" r="40%">
+                        <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/>
+                        <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                    </radialGradient>
+                </defs>
+                <path d="M20,0 C31.046,0 40,8.954 40,20 C40,31.046 31.046,40 20,40 C8.954,40 0,31.046 0,20 C0,8.954 8.954,0 20,0 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/>
+                <path d="M20,0 C31.046,0 40,8.954 40,20 C40,31.046 31.046,40 20,40 C8.954,40 0,31.046 0,20 C0,8.954 8.954,0 20,0 Z" fill="url(#redBalloonGrad)"/>
+                <path d="M18 39 C16 42, 16 46, 20 48 C 24 46, 24 42, 22 39" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5"/>
+            </svg>`;
+        const redBalloonImage = new Image();
+        redBalloonImage.src = `data:image/svg+xml;base64,${btoa(redBalloonSVG())}`;
+
+
+        const flowerSVG = () => `
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(20 20)">
+                    <circle cx="0" cy="0" r="6" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/>
+                    <path d="M0 -8 C 5 -12, 5 -12, 0 -16 C -5 -12, -5 -12, 0 -8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/>
+                    <path d="M0 8 C 5 12, 5 12, 0 16 C -5 12, -5 12, 0 8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/>
+                    <path d="M-8 0 C -12 5, -12 5, -16 0 C -12 -5, -12 -5, -8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/>
+                    <path d="M8 0 C 12 5, 12 5, 16 0 C 12 -5, 12 -5, 8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/>
+                </g>
+            </svg>`;
+        const flowerImage = new Image();
+        flowerImage.src = `data:image/svg+xml;base64,${btoa(flowerSVG())}`;
+
+
+        const starSVG = () => `
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 20 2 L 25 14 L 38 14 L 28 22 L 32 36 L 20 28 L 8 36 L 12 22 L 2 14 L 15 14 Z" fill="#ec4899" stroke="#9d174d" stroke-width="2" stroke-linejoin="round"/>
+            </svg>`;
+        const starImage = new Image();
+        starImage.src = `data:image/svg+xml;base64,${btoa(starSVG())}`;
+
+
+        const dolphinSVG = () => `
+            <svg width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="dolphinGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                        <stop offset="0%" style="stop-color:#a5f3fc; stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#06b6d4; stop-opacity:1" />
+                    </radialGradient>
+                </defs>
+                <g transform="translate(0, 5)">
+                    <path d="M 0 25 C 10 20, 10 30, 0 25" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/>
+                    <path d="M 5 20 C 15 15, 15 25, 5 20" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/>
+                    <path d="M 10 22 C 30 5, 70 5, 90 20 C 95 25, 100 25, 95 30 C 80 45, 30 45, 10 28 Z" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round" />
+                    <path d="M 40 28 C 35 35, 45 40, 50 38" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="85" cy="24" r="4" fill="white" stroke="#083344" stroke-width="1"/>
+                    <circle cx="86" cy="24" r="2" fill="#083344" />
+                </g>
+            </svg>`;
+        const dolphinImage = new Image();
+        dolphinImage.src = `data:image/svg+xml;base64,${btoa(dolphinSVG())}`;
+
+
+        // --- Pop Particle Class ---
+        class PopParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 10 + 5;
+                this.speedX = Math.random() * 6 - 3;
+                this.speedY = Math.random() * -3 - 1;
+                this.color = color;
+                this.life = 100;
+                this.gravity = 0.1;
+                this.opacity = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.life -= 2;
+                this.opacity = this.life / 100;
+            }
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+        function createPopEffect(x, y, color) {
+            playPopSound();
+            let particleColor = 'rgba(200, 230, 255, 0.7)';
+            for (let i = 0; i < 15; i++) {
+                particles.push(new PopParticle(x, y, particleColor));
+            }
+        }
+
+
+        // --- Game Mechanics ---
+        function resizeCanvas() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+
+            player.baseY = canvasHeight / 1.5;
+            if (!player.hasMuffler) {
+                player.targetY = player.baseY;
+                player.y = player.baseY;
+            }
+        }
+
+
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.textContent = score;
+        }
+
+
+        function resetGame() {
+            score = 0;
+            frame = 0;
+            bubbles = [];
+            redBalloons = [];
+            powerUps = [];
+            dolphins = [];
+            particles = [];
+            player.isPuffed = false;
+            player.hasMuffler = false;
+            player.puffTimer = 0;
+            player.mufflerTimer = 0;
+            player.targetY = player.baseY;
+            player.y = player.baseY;
+            updateScore(0);
+            puffTimer.style.display = 'none';
+        }
+
+
+        function startGame() {
+            resetGame();
+            gameRunning = true;
+            startModal.style.display = 'none';
+            levelCompleteModal.style.display = 'none';
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            gameLoop();
+        }
+
+
+        function gameOver() {
+            playMineSound();
+            gameRunning = false;
+            startModal.style.display = 'block';
+        }
+
+
+        function levelComplete() {
+            gameRunning = false;
+            playLevelWinSound();
+            // This modal now prompts for the $.99 unlock since this is Level 2
+            levelCompleteModal.style.display = 'flex'; 
+            nextLevelButton.href = "#"; // Placeholder for IAP/next level action
+        }
+
+
+        // --- Spawning Logic ---
+        function spawnObjects() {
+            if (frame % LEVEL_SETTINGS.bubbleSpawnRate === 0) {
+                bubbles.push({
+                    x: Math.random() * canvasWidth,
+                    y: canvasHeight + 50,
+                    radius: 20,
+                    img: bubbleImage, 
+                    color: 'rgba(200, 230, 255, 0.7)',
+                    speed: LEVEL_SETTINGS.bubbleSpeed + Math.random() * 0.5,
+                    wobble: Math.random() * 2 - 1,
+                    wobbleSpeed: Math.random() * 0.05 + 0.02
+                });
+            }
+            if (frame % LEVEL_SETTINGS.redBalloonSpawnRate === 0) {
+                redBalloons.push({
+                    x: Math.random() * canvasWidth,
+                    y: canvasHeight + 40,
+                    radius: 20,
+                    img: redBalloonImage, 
+                    speed: LEVEL_SETTINGS.redBalloonSpeed + Math.random() * 0.5
+                });
+            }
+            if (frame % LEVEL_SETTINGS.powerUpSpawnRate === 0) {
+                const type = Math.random() > 0.5 ? 0 : 1;
+                powerUps.push({
+                    x: Math.random() * canvasWidth,
+                    y: canvasHeight + 40,
+                    radius: 20,
+                    img: type === 0 ? flowerImage : starImage,
+                    type: type,
+                    speed: LEVEL_SETTINGS.powerUpSpeed + Math.random() * 0.5
+                });
+            }
+            if (player.hasMuffler && frame % LEVEL_SETTINGS.dolphinSpawnRate === 0) {
+                dolphins.push({
+                    x: -100,
+                    y: Math.random() * (canvasHeight - 200),
+                    radius: 35,
+                    img: dolphinImage,
+                    speed: Math.random() * 2 + 2
+                });
+            }
+        }
+
+
+        // --- Player Logic ---
+        function updatePlayer() {
+            player.x += (player.targetX - player.x) * player.lerpFactor;
+
+
+            const bobble = Math.sin(frame * 0.05) * 3;
+            const baseY = player.baseY + bobble;
+
+
+            if (player.hasMuffler) {
+                // Star mode: Full movement
+                player.y += (player.targetY - player.y) * player.lerpFactor;
+            } else {
+                // Normal mode: Y locked
+                player.y += (baseY - player.y) * player.lerpFactor;
+                player.targetY = baseY; 
+            }
+
+
+            if (player.isPuffed) {
+                player.puffTimer -= 1000 / 60;
+                const timerPercent = (player.puffTimer / player.puffDuration) * 100;
+                puffTimerBar.style.width = `${timerPercent}%`;
+
+
+                if (player.puffTimer <= 0) {
+                    player.isPuffed = false;
+                    puffTimer.style.display = 'none';
+                }
+            }
+
+
+            if (player.hasMuffler) {
+                player.mufflerTimer -= 1000 / 60;
+                if (player.mufflerTimer <= 0) {
+                    player.hasMuffler = false;
+                }
+            }
+        }
+
+
+        // --- Object Update Logic ---
+        function updateObjects() {
+            const playerHitbox = { x: player.x, y: player.y, radius: player.radius };
+
+
+            // --- Bubbles (Good) ---
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                bubbles[i].y -= bubbles[i].speed;
+                bubbles[i].x += Math.sin(frame * bubbles[i].wobbleSpeed) * bubbles[i].wobble;
+
+
+                if (bubbles[i].y < -50) {
+                    bubbles.splice(i, 1);
+                    continue;
+                }
+
+
+                if (checkCollision(playerHitbox, bubbles[i])) {
+                    // Pop bubbles when Puffed OR Starry
+                    if (player.isPuffed || player.hasMuffler) { 
+                        createPopEffect(bubbles[i].x, bubbles[i].y, bubbles[i].color);
+                        updateScore(1);
+                        bubbles.splice(i, 1);
+                    }
+                }
+            }
+
+
+            // --- Red Balloons (Bad) ---
+            for (let i = redBalloons.length - 1; i >= 0; i--) {
+                redBalloons[i].y -= redBalloons[i].speed;
+
+
+                if (redBalloons[i].y < -40) {
+                    redBalloons.splice(i, 1);
+                    continue;
+                }
+
+
+                if (checkCollision(playerHitbox, redBalloons[i])) {
+                    gameOver();
+                    return;
+                }
+            }
+
+
+            // --- Dolphins (Bad - Star Only) ---
+            for (let i = dolphins.length - 1; i >= 0; i--) {
+                dolphins[i].x += dolphins[i].speed;
+                if (dolphins[i].x > canvasWidth + 100) {
+                    dolphins.splice(i, 1);
+                    continue;
+                }
+                
+                if (player.hasMuffler && checkCollision(playerHitbox, dolphins[i])) {
+                    gameOver();
+                    return;
+                }
+            }
+            
+            // --- Power-ups (Good) ---
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                powerUps[i].y -= powerUps[i].speed;
+
+
+                if (powerUps[i].y < -40) {
+                    powerUps.splice(i, 1);
+                    continue;
+                }
+
+
+                if (checkCollision(playerHitbox, powerUps[i])) {
+                    playPowerUpSound();
+                    if (powerUps[i].type === 0) { // Flower
+                        player.isPuffed = true;
+                        player.puffTimer = player.puffDuration;
+                        puffTimer.style.display = 'block';
+                    } else { // Star
+                        player.hasMuffler = true; // "Star Mode"
+                        player.mufflerTimer = player.mufflerDuration;
+                    }
+                    powerUps.splice(i, 1);
+                }
+            }
+
+
+            // --- Particles ---
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+
+        function checkCollision(obj1, obj2) {
+            const dx = obj1.x - obj2.x;
+            const dy = obj1.y - obj2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < obj1.radius + obj2.radius;
+        }
+
+
+        // --- Draw Logic ---
+        function draw() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+
+            bubbles.forEach(b => ctx.drawImage(b.img, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2));
+            redBalloons.forEach(m => ctx.drawImage(m.img, m.x - m.radius, m.y - m.radius, m.radius * 2, m.radius * 2.4));
+            powerUps.forEach(p => ctx.drawImage(p.img, p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2));
+            dolphins.forEach(d => ctx.drawImage(d.img, d.x - d.radius, d.y - d.radius, d.radius * 2.8, d.radius * 1.8));
+
+
+            let currentImage = playerImageNormal;
+            if (player.isPuffed && player.hasMuffler) currentImage = playerImagePuffedMuffler;
+            else if (player.isPuffed) currentImage = playerImagePuffed;
+            else if (player.hasMuffler) currentImage = playerImageMuffler;
+
+
+            const drawSize = 80;
+            ctx.drawImage(currentImage, player.x - (drawSize/2), player.y - (drawSize/2), drawSize, drawSize);
+
+
+            particles.forEach(p => p.draw());
+        }
+
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            spawnObjects();
+            updatePlayer();
+            updateObjects();
+            draw();
+
+
+            if (score >= LEVEL_COMPLETE_SCORE) {
+                levelComplete();
+                return;
+            }
+
+
+            frame++;
+            requestAnimationFrame(gameLoop);
+        }
+
+
+        // --- Event Listeners ---
+        function handleMove(clientX, clientY) {
+            player.targetX = clientX;
+            if (player.hasMuffler) {
+                player.targetY = clientY;
+            }
+        }
+
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+
+        canvas.addEventListener('mousemove', (e) => {
+            handleMove(e.clientX, e.clientY);
+        });
+
+
+        startButton.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            startGame(); 
+        });
+        startButton.addEventListener('click', startGame);
+
+
+        nextLevelButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            // TODO: In a real app, this would initiate the \$0.99 purchase flow.
+            // For now, it resets the game to Level 2 for endless play.
+            if (!gameRunning) {
+                startGame();
+            }
+        });
+
+
+
+
+        muteButton.addEventListener('click', () => {
+            isMuted = !isMuted;
+            muteButton.textContent = isMuted ? '🔇' : '🔊';
+        });
+
+
+        window.addEventListener('resize', resizeCanvas);
+
+
+        // --- Logo Particle System ---
+        const particleCanvas = document.getElementById('particleCanvas');
+        const pCtx = particleCanvas.getContext('2d');
+        let logoParticles = [];
+        let pCanvasWidth, pCanvasHeight;
+
+
+        function resizeParticleCanvas() {
+            const modal = particleCanvas.parentElement;
+            pCanvasWidth = modal.clientWidth;
+            pCanvasHeight = modal.clientHeight;
+
+
+            if(pCanvasWidth === 0 || pCanvasHeight === 0) {
+                const tempModal = document.querySelector("#startModal .modal-inner");
+                if(tempModal) {
+                    pCanvasWidth = tempModal.clientWidth;
+                    pCanvasHeight = tempModal.clientHeight;
+                }
+            }
+
+
+            particleCanvas.width = pCanvasWidth;
+            particleCanvas.height = pCanvasHeight;
+        }
+
+
+        class LogoParticle {
+            constructor() {
+                this.x = Math.random() * pCanvasWidth;
+                this.y = pCanvasHeight + Math.random() * 50;
+                this.radius = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.radius) {
+                    this.y = pCanvasHeight + this.radius;
+                    this.x = Math.random() * pCanvasWidth;
+                }
+            }
+            draw() {
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                pCtx.fill();
+            }
+        }
+
+
+        function initParticles() {
+            resizeParticleCanvas();
+            logoParticles = [];
+            for (let i = 0; i < 20; i++) {
+                logoParticles.push(new LogoParticle());
+            }
+        }
+
+
+        let particleAnimationId;
+        function animateParticles() {
+            if (!pCtx) return;
+            pCtx.clearRect(0, 0, pCanvasWidth, pCanvasHeight);
+            logoParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            particleAnimationId = requestAnimationFrame(animateParticles);
+        }
+
+
+        // --- Init ---
+        function init() {
+            resizeCanvas();
+            player.x = canvasWidth / 2;
+            player.targetX = canvasWidth / 2;
+            
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
+            }, 100);
+        }
+
+
+        init();
+    </script>
+</body>
+</html>

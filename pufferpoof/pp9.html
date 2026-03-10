@@ -1,0 +1,1177 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Puffer Poof - Aim High</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0c4a6e;
+            color: #f0f9ff;
+            font-family: 'Bangers', cursive;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20% 30%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 10% 80%, white, transparent),
+                radial-gradient(1px 1px at 90% 60%, white, transparent),
+                radial-gradient(2px 2px at 30% 90%, white, transparent),
+                radial-gradient(1px 1px at 70% 40%, white, transparent);
+            background-size: 300px 300px;
+            z-index: -1;
+            animation: moveStars 120s linear infinite;
+        }
+        @keyframes moveStars {
+            from { background-position: 0 0; }
+            to { background-position: 300px 600px; }
+        }
+        #gameWrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #020111, #100f2b, #191970);
+            width: 100%;
+            height: 100%;
+        }
+        /* --- UNIFIED LOGO/MODAL STYLING --- */
+        #startModal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 400px;
+            z-index: 100;
+        }
+        @keyframes subtleBob { 0% { transform: translateY(0px); } 50% { transform: translateY(-3px); } 100% { transform: translateY(0px); } }
+        @keyframes subtleBobOOF { 0% { transform: translateY(0px); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0px); } }
+        @keyframes pulseGlow { 0% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; } 50% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 20px #fde047; } 100% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; } }
+        @keyframes animatedBackground { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+        .modal-inner {
+            background: linear-gradient( -45deg, #0369a1, #075985, #0c4a6e, #075985, #0369a1 );
+            background-size: 400% 400%;
+            animation: animatedBackground 15s ease infinite;
+            border: 4px solid #f0f9ff;
+            border-radius: 1.5rem;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .modal-content { position: relative; z-index: 2; }
+        .baseline-text { font-size: 6.8rem; line-height: 0.8; letter-spacing: -0.025em; transform: scale(1.1, 1); }
+        .modal-content h1 { color: #fde047; margin: 0; animation: pulseGlow 3s ease-in-out infinite; }
+        #poof-line { display: flex; align-items: center; justify-content: center; margin-top: -1.5rem; }
+        .logo-p-container { position: relative; width: 100px; height: 115px; margin-right: -30px; z-index: 10; animation: subtleBob 4s ease-in-out infinite; }
+        .logo-p-svg { width: 100px; height: 115px; }
+        #logoPuffer { position: absolute; width: 58px; height: 58px; top: 25px; left: 28px; z-index: 5; }
+        .oof-container { display: flex; align-items: center; justify-content: center; padding-left: 8px; animation: subtleBobOOF 3.8s ease-in-out infinite; }
+        .logo-o { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3.2rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 4px -4px 8px rgba(255,255,255,0.3); position: relative; }
+        .logo-o::after { content: ''; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); width: 2px; height: 16px; background: white; opacity: 0.7; }
+        .logo-f-container { width: 75px; height: 115px; margin-left: -15px; animation: subtleBobOOF 3.8s ease-in-out infinite; animation-delay: -0.1s; }
+        .logo-f-svg { width: 75px; height: 115px; }
+        #startButton { font-family: 'Bangers', cursive; font-size: 2.5rem; letter-spacing: 0.05em; color: #082f49; background: #fde047; border: 3px solid #082f49; border-radius: 1rem; padding: 0.5rem 2.5rem; margin-top: 1rem; box-shadow: 0 5px 0 #facc15, 0 8px 10px rgba(0,0,0,0.3); transition: all 0.1s ease-out; cursor: pointer; }
+        #startButton:active { transform: translateY(3px); box-shadow: 0 2px 0 #facc15, 0 5px 5px rgba(0,0,0,0.3); }
+
+
+        /* --- IN-GAME UI --- */
+        #uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        #scoreDisplay { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 3.5rem; color: white; text-shadow: 3px 3px 0 #082f49; }
+        #livesDisplay { position: absolute; top: 15px; left: 15px; font-size: 2.5rem; color: #f472b6; text-shadow: 2px 2px 0 #082f49; letter-spacing: 0.1em; }
+        #buyLifeButton { position: absolute; top: 60px; left: 15px; font-family: 'Bangers', cursive; font-size: 1.25rem; color: #082f49; background: #fde047; border: 2px solid #082f49; border-radius: 0.75rem; padding: 0.25rem 0.75rem; box-shadow: 0 3px 0 #facc15; pointer-events: all; cursor: pointer; }
+        #buyLifeButton:active { transform: translateY(2px); box-shadow: 0 1px 0 #facc15; }
+        #buyLifeButton:disabled { background: #a1a1aa; color: #404040; box-shadow: 0 3px 0 #71717a; cursor: not-allowed; }
+        
+        #paywallModal, #rocketModal {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(3, 105, 161, 0.9);
+            border: 4px solid #f0f9ff;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 380px;
+            z-index: 200;
+            pointer-events: all;
+        }
+        .modal-title { font-size: 4rem; color: #fde047; text-shadow: 3px 3px 0px rgba(0,0,0,0.4); margin: 0 0 1rem 0; line-height: 1; }
+        .modal-text { font-size: 1.5rem; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); margin-bottom: 1.5rem; }
+        .modal-button { font-family: 'Bangers', cursive; font-size: 2rem; letter-spacing: 0.05em; color: #082f49; background: #fde047; border: 3px solid #082f49; border-radius: 1rem; padding: 0.5rem 1.5rem; box-shadow: 0 5px 0 #facc15, 0 8px 10px rgba(0,0,0,0.3); transition: all 0.1s ease-out; cursor: pointer; text-decoration: none; }
+        .close-button { position: absolute; top: -10px; right: -10px; width: 40px; height: 40px; font-family: 'Bangers', cursive; font-size: 1.5rem; background: #ef4444; color: white; border: 3px solid #f0f9ff; border-radius: 50%; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); box-shadow: 0 3px 5px rgba(0,0,0,0.3); cursor: pointer; }
+        
+        #rocketSVGContainer {
+            width: 150px;
+            height: 150px;
+            margin: -1rem 0 1rem 0;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shaking {
+            animation: shake 0.5s infinite;
+        }
+
+
+        #muteButton { position: absolute; bottom: 15px; right: 15px; font-size: 2rem; background: rgba(0,0,0,0.2); border: 2px solid white; color: white; border-radius: 50%; width: 50px; height: 50px; z-index: 11; pointer-events: all; display: flex; align-items: center; justify-content: center; }
+        
+        #timerContainer { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 300px; display: flex; flex-direction: column; gap: 8px; }
+        #puffTimer, #invisibilityTimer, #mufflerTimer { width: 100%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; display: none; overflow: hidden; }
+        #puffTimer { border: 2px solid white; }
+        #invisibilityTimer { border: 2px solid #fde047; }
+        #mufflerTimer { border: 2px solid #ec4899; }
+        #puffTimerBar, #invisibilityTimerBar, #mufflerTimerBar { width: 100%; height: 100%; border-radius: 7px; }
+        #puffTimerBar { background: linear-gradient(to right, #f472b6, #ec4899); }
+        #invisibilityTimerBar { background: linear-gradient(to right, #fef08a, #fde047); }
+        #mufflerTimerBar { background: linear-gradient(to right, #f9a8d4, #f472b6); }
+    </style>
+</head>
+<body>
+    <div id="gameWrapper">
+        <canvas id="gameCanvas"></canvas>
+        <div id="uiLayer">
+            <div id="livesDisplay"></div>
+            <button id="buyLifeButton">+1 Life ($0.99)</button>
+            <div id="scoreDisplay">0</div>
+            <div id="timerContainer">
+                <div id="invisibilityTimer"> <div id="invisibilityTimerBar"></div> </div>
+                <div id="mufflerTimer"> <div id="mufflerTimerBar"></div> </div>
+                <div id="puffTimer"> <div id="puffTimerBar"></div> </div>
+            </div>
+            
+            <div id="rocketModal">
+                <h2 class="modal-title">ROCKET BOOST!</h2>
+                <div id="rocketSVGContainer">
+                    </div>
+                <p id="rocketModalText" class="modal-text">Powering up...</p>
+                <button id="resumeGameButton" class="modal-button" style="display: none;">Resume!</button>
+            </div>
+
+
+            <div id="paywallModal">
+                <button id="closePaywallButton" class="close-button">X</button>
+                <h2 class="modal-title">EXTRA LIFE</h2>
+                <p class="modal-text">Need a boost? Get one extra life to continue your adventure!</p>
+                <div style="font-size: 5rem; margin: -1rem 0 1rem 0;">❤️</div>
+                <button id="confirmPurchaseButton" class="modal-button">Buy for $0.99</button>
+                <p id="maxLivesMessage" class="modal-text" style="display: none; color: #f87171; margin-top: 1rem;">You have the maximum number of lives!</p>
+            </div>
+        </div>
+        <button id="muteButton">🔊</button>
+        <div id="startModal">
+            <div class="modal-inner">
+                <canvas id="particleCanvas"></canvas>
+                <div class="modal-content">
+                    <h1 class="baseline-text">PUFFER</h1>
+                    <div id="poof-line">
+                        <div class="logo-p-container">
+                            <svg id="logoPSVG" class="logo-p-svg" viewBox="10 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                                <defs> <radialGradient id="tridentGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#fde047; stop-opacity:1" /> <stop offset="100%" style="stop-color:#facc15; stop-opacity:1" /> </radialGradient> </defs>
+                                <text font-family: 'Bangers', cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > P </text>
+                            </svg>
+                            <img src="" id="logoPuffer" alt="Puffer">
+                        </div>
+                        <div class="oof-container">
+                            <div class="logo-o" style="background-color: #f472b6; margin-right: -8px; z-index: 2; animation-delay: -0.2s;"></div>
+                            <div class="logo-o" style="background-color: #3b82f6; z-index: 1;"></div>
+                            <div class="logo-f-container">
+                                <svg class="logo-f-svg" viewBox="10 0 70 110" xmlns="http://www.w3.org/2000/svg">
+                                    <text font-family: 'Bangers', cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > F </text>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 style="font-family: 'Bangers', cursive; font-size: 2.5rem; color: #38bdf8; text-shadow: 3px 3px 0 #075985; margin-top: 1rem; margin-bottom: 0;">AIM HIGH</h2>
+                    <div id="instructions" style="color: white; text-align: left; padding: 0 1.5rem; margin-top: 1.5rem; font-family: sans-serif; letter-spacing: 0.05em; font-size: 0.9rem; line-height: 1.4; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                        <h3 style="font-family: 'Bangers', cursive; font-size: 2rem; color: #fde047; text-align: center; margin-bottom: 0.5rem; letter-spacing: 0.025em;">How to Play</h3>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">🐢</span>
+                                <span><strong>Slow start!</strong> Game is slower until 50 points.</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">🎯</span>
+                                <span>Pop bubbles to score! <strong>Survive!</strong></span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">💖</span>
+                                <span>Catch <strong>Heart Balloons</strong> (Max 3, very rare).</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">⭐</span>
+                                <span>Star protects from threats (but <strong>NOT Spikey Balloons!</strong>)</span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">👻</span>
+                                <span>Invisibility hides you from <strong>Dolphins & Turtles ONLY!</strong></span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">🎈</span>
+                                <span><strong>NEVER</strong> touch <strong>Spikey Balloons!</strong></span>
+                            </li>
+                            <li style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                                <span style="font-size: 1.1rem; margin-right: 0.75rem; width: 25px; text-align: center;">🌊</span>
+                                <span><strong>New dangers</strong> appear as you score!</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <button id="startButton">Start Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- Core Game Setup ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth, canvasHeight;
+
+
+        // --- Game State ---
+        let gameRunning = false;
+        let score = 0;
+        let isMuted = false;
+        const CURRENT_LEVEL = 9;
+        let lives = 3;
+        const MAX_LIVES = 5;
+        const MAX_EARNED_LIVES = 3;
+        let milestoneCounter = 0; 
+        let rocketEventActive = false; 
+
+
+        // --- Level 9 Settings (Endless) ---
+        const LEVEL_SETTINGS = {
+            bubbleSpeed: 1.6, 
+            redBalloonSpeed: 2.1,
+            powerUpSpeed: 1.6,
+            bubbleSpawnRate: 65,
+            redBalloonSpawnRate: 80,
+            powerUpSpawnRate: 280,
+            dolphinSpawnRate: 220,
+            heartBalloonSpawnRate: 5400, // 90 seconds
+            turtleSpawnRate: 200,
+            jellyfishSpawnRate: 0,
+            sharkSpawnRate: 0,
+            crabSpawnRate: 0,
+            octopusSpawnRate: 0,
+            whaleSpawnRate: 0
+        };
+        const INITIAL_BUBBLE_SPEED = LEVEL_SETTINGS.bubbleSpeed;
+
+
+        // --- Player State ---
+        let player = {
+            x: 0, y: 0, targetX: 0, radius: 20, isPuffed: false,
+            puffTimer: 0, puffDuration: 7000,
+            hasMuffler: false, // Star power-up
+            mufflerTimer: 0, mufflerDuration: 10000,
+            targetY: 0, baseY: 0, lerpFactor: 0.2,
+            isInvincible: false, invincibleTimer: 0,
+            invincibleDuration: 3000, // 3 seconds
+            isInvisible: false, invisibleTimer: 0, invisibleDuration: 5000
+        };
+
+
+        // --- Game Objects ---
+        let bubbles = [];
+        let redBalloons = [];
+        let powerUps = []; 
+        let dolphins = [];
+        let particles = [];
+        let heartBalloons = [];
+        let turtles = [];
+        let jellyfish = [];
+        let sharks = [];
+        let crabs = [];
+        let octopi = [];
+        let whales = [];
+        let frame = 0;
+
+
+        // --- DOM Elements ---
+        let startModal, startButton, scoreDisplay, muteButton, puffTimer, puffTimerBar;
+        let logoPuffer, livesDisplay, invisibilityTimer;
+        let invisibilityTimerBar, mufflerTimer, mufflerTimerBar, paywallModal, buyLifeButton;
+        let closePaywallButton, confirmPurchaseButton, maxLivesMessage, particleCanvas, pCtx;
+        let rocketModal, resumeGameButton, rocketSVGContainer, rocketModalText;
+
+
+        // --- Audio (Identical) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function createSound(type, freq, duration) {
+            if (!audioCtx || isMuted) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            if (type === 'sawtooth') {
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(freq / 4, audioCtx.currentTime + duration);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            } else if (type === 'triangle') {
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration * 0.5);
+                oscillator.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + duration);
+            } else {
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            }
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+        const playPopSound = () => createSound('sine', 440, 0.1);
+        const playMineSound = () => createSound('sawtooth', 220, 0.5);
+        const playPowerUpSound = () => createSound('triangle', 660, 0.2);
+        const playInvisibilitySound = () => {
+            createSound('sine', 880, 0.05);
+            setTimeout(() => createSound('sine', 1046, 0.1), 50);
+        };
+        const playHeartSound = () => {
+            createSound('sine', 587, 0.1);
+            setTimeout(() => createSound('sine', 880, 0.15), 100);
+        };
+        const playRocketSound = () => {
+            if (!audioCtx || isMuted) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.5);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3);
+            osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 3);
+        };
+
+
+        // --- Player SVGs (Identical) ---
+        const playerSVG = (isPuffed, hasMuffler) => {
+            const bodyRadius = isPuffed ? 11 : 8;
+            const bodyColor = "#facc15"; const bodyStroke = "#082f49";
+            const eyeRadius = isPuffed ? 5 : 3; const pupilRadius = isPuffed ? 2.5 : 1.5;
+            let spikes = '';
+            const spikeLength = isPuffed ? 6 : 1; const spikeWidth = isPuffed ? 2.5 : 1.5;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * 2 * Math.PI;
+                const x1 = 12 + Math.cos(angle) * (bodyRadius - 1); const y1 = 13 + Math.sin(angle) * (bodyRadius - 1);
+                const x2 = 12 + Math.cos(angle) * (bodyRadius + spikeLength); const y2 = 13 + Math.sin(angle) * (bodyRadius + spikeLength);
+                spikes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f97316" stroke-width="${spikeWidth}" stroke-linecap="round"/>`;
+            }
+            const mufflerStar = hasMuffler ? `<path d="M 4 10 L 6 6 L 2 4 L 7 4 L 8 0 L 9 4 L 14 4 L 10 6 L 12 10 L 8 7 Z" fill="#ec4899" stroke="#9d174d" transform="translate(4, 15) scale(0.6)"/>` : '';
+            return ` <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 24 24" fill="none" stroke-width="1.5"> <defs> <radialGradient id="pufferGradientGame" cx="50%" cy="50%" r="50%" fx="70%" fy="70%"> <stop offset="0%" style="stop-color:#fef08a; stop-opacity:1" /> <stop offset="100%" style="stop-color:${bodyColor}; stop-opacity:1" /> </radialGradient> </defs> <g> ${spikes} ${mufflerStar} <circle cx="12" cy="13" r="${bodyRadius}" fill="url(#pufferGradientGame)" stroke="${bodyStroke}" stroke-linejoin="round"/> <ellipse cx="6" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(-20 6 13)"/> <ellipse cx="18" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(20 18 13)"/> <path d="M10.5 15C10.5 15 11 15.5 12 15.5C13 15.5 13.5 15 13.5 15" stroke="${bodyStroke}" stroke-linecap="round"/> <circle cx="14.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="14.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" /> <circle cx="9.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="9.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" /> </g> </svg>`;
+        }
+        const playerImageNormal = new Image(); playerImageNormal.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, false))}`;
+        const playerImagePuffed = new Image(); playerImagePuffed.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, false))}`;
+        const playerImageMuffler = new Image(); playerImageMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, true))}`;
+        const playerImagePuffedMuffler = new Image(); playerImagePuffedMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, true))}`;
+
+
+        // --- Item SVGs (Identical) ---
+        const bubbleSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="bubbleGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:rgba(255,255,255,0.7); stop-opacity:1" /> <stop offset="100%" style="stop-color:rgba(255,255,255,0); stop-opacity:1" /> </radialGradient> </defs> <circle cx="20" cy="20" r="18" fill="rgba(200, 230, 255, 0.4)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/> <circle cx="20" cy="20" r="18" fill="url(#bubbleGrad)"/> <path d="M 12 12 C 15 14, 20 18, 22 22 C 21 16, 16 12, 12 12 Z" fill="rgba(255, 255, 255, 0.7)" /> </svg>`;
+        const bubbleImage = new Image(); bubbleImage.src = `data:image/svg+xml;base64,${btoa(bubbleSVG())}`;
+        const redBalloonSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="redBalloonGrad" cx="50%" cy="40%" r="40%"> <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/> <stop offset="100%" stop-color="rgba(255,255,255,0)"/> </radialGradient> </defs> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" transform="translate(0 -3)"/> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="url(#redBalloonGrad)" transform="translate(0 -3)"/> <g stroke="#b91c1c" stroke-width="2" stroke-linecap="round"> <line x1="20" y1="0" x2="20" y2="4" /> <line x1="6" y1="6" x2="9" y2="9" /> <line x1="34" y1="6" x2="31" y2="9" /> <line x1="0" y1="20" x2="4" y2="20" /> <line x1="40" y1="20" x2="36" y2="20" /> </g> </svg>`;
+        const redBalloonImage = new Image(); redBalloonImage.src = `data:image/svg+xml;base64,${btoa(redBalloonSVG())}`;
+        const flowerSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(20 20)"> <circle cx="0" cy="0" r="6" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 -8 C 5 -12, 5 -12, 0 -16 C -5 -12, -5 -12, 0 -8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M0 8 C 5 12, 5 12, 0 16 C -5 12, -5 12, 0 8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M-8 0 C -12 5, -12 5, -16 0 C -12 -5, -12 -5, -8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M8 0 C 12 5, 12 5, 16 0 C 12 -5, 12 -5, 8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> </g> </svg>`;
+        const flowerImage = new Image(); flowerImage.src = `data:image/svg+xml;base64,${btoa(flowerSVG())}`;
+        const starSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <path d="M 20 2 L 25 14 L 38 14 L 28 22 L 32 36 L 20 28 L 8 36 L 12 22 L 2 14 L 15 14 Z" fill="#ec4899" stroke="#9d174d" stroke-width="2" stroke-linejoin="round"/> </svg>`;
+        const starImage = new Image(); starImage.src = `data:image/svg+xml;base64,${btoa(starSVG())}`;
+        const yellowFlowerSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(20 20)"> <circle cx="0" cy="0" r="6" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 -8 C 5 -12, 5 -12, 0 -16 C -5 -12, -5 -12, 0 -8" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 8 C 5 12, 5 12, 0 16 C -5 12, -5 12, 0 8" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M-8 0 C -12 5, -12 5, -16 0 C -12 -5, -12 -5, -8 0" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M8 0 C 12 5, 12 5, 16 0 C 12 -5, 12 -5, 8 0" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> </g> </svg>`;
+        const yellowFlowerImage = new Image(); yellowFlowerImage.src = `data:image/svg+xml;base64,${btoa(yellowFlowerSVG())}`;
+        const dolphinSVG = () => ` <svg width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="dolphinGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#a5f3fc; stop-opacity:1" /> <stop offset="100%" style="stop-color:#06b6d4; stop-opacity:1" /> </radialGradient> </defs> <g transform="translate(0, 5)"> <path d="M 0 25 C 10 20, 10 30, 0 25" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/> <path d="M 5 20 C 15 15, 15 25, 5 20" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/> <path d="M 10 22 C 30 5, 70 5, 90 20 C 95 25, 100 25, 95 30 C 80 45, 30 45, 10 28 Z" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round" /> <path d="M 40 28 C 35 35, 45 40, 50 38" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="2.5" stroke-linejoin="round"/> <circle cx="85" cy="24" r="4" fill="white" stroke="#083344" stroke-width="1"/> <circle cx="86" cy="24" r="2" fill="#083344" /> </g> </svg>`;
+        const dolphinImage = new Image(); dolphinImage.src = `data:image/svg+xml;base64,${btoa(dolphinSVG())}`;
+        const heartBalloonSVG = () => ` <svg width="40" height="48" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="heartGrad" cx="50%" cy="40%" r="40%"> <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/> <stop offset="100%" stop-color="rgba(255,255,255,0)"/> </radialGradient> </defs> <path d="M20,10 C10,-5 0,5 0,17 C0,27 10,35 20,40 C30,35 40,27 40,17 C40,5 30,-5 20,10 Z" fill="#f472b6" stroke="#db2777" stroke-width="2"/> <path d="M20,10 C10,-5 0,5 0,17 C0,27 10,35 20,40 C30,35 40,27 40,17 C40,5 30,-5 20,10 Z" fill="url(#heartGrad)"/> <path d="M18 39 C16 42, 16 46, 20 48 C 24 46, 24 42, 22 39" fill="#f472b6" stroke="#db2777" stroke-width="1.5" transform="translate(0 -2)"/> </svg>`;
+        const heartBalloonImage = new Image(); heartBalloonImage.src = `data:image/svg+xml;base64,${btoa(heartBalloonSVG())}`;
+        const turtleSVG = () => `<svg width="80" height="60" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 5)"> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30 Z" fill="#166534" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30" stroke="#fde047" stroke-width="1" fill="none" opacity="0.5"/> <path d="M 40 5 C 30 15, 30 25, 40 30 C 50 25, 50 15, 40 5" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 25 12 C 18 18, 18 25, 25 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 55 12 C 62 18, 62 25, 55 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <circle cx="70" cy="20" r="8" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <circle cx="73" cy="18" r="1.5" fill="black"/> <path d="M 15 25 C 0 20, 0 35, 15 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 60 25 C 75 20, 75 35, 60 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 20 30 C 10 45, 20 45, 25 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 55 30 C 65 45, 55 45, 50 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> </g> </svg>`;
+        const turtleImage = new Image(); turtleImage.src = `data:image/svg+xml;base64,${btoa(turtleSVG())}`;
+        
+        // --- NEW SVGS (THREATS & ROCKET) (Identical) ---
+        const rocketSVG = () => ` <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 5) rotate(-45 50 50)"> <path d="M 50 10 C 45 20, 40 30, 40 50 L 60 50 C 60 30, 55 20, 50 10 Z" fill="#f87171" stroke="#dc2626" stroke-width="3"/> <path d="M 40 50 L 40 80 C 40 85, 35 85, 35 80 L 35 50 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/> <path d="M 60 50 L 60 80 C 60 85, 65 85, 65 80 L 65 50 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/> <path d="M 40 50 L 60 50 L 60 70 C 60 85, 40 85, 40 70 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="3"/> <circle cx="50" cy="65" r="8" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/> <path d="M 35 80 C 25 95, 45 95, 35 80" fill="#f87171" stroke="#dc2626" stroke-width="3"/> <path d="M 65 80 C 55 95, 75 95, 65 80" fill="#f87171" stroke="#dc2626" stroke-width="3"/> <path d="M 50 80 C 45 95, 55 95, 50 80" fill="#f87171" stroke="#dc2626" stroke-width="3"/> </g> </svg>`;
+        const rocketImage = new Image(); rocketImage.src = `data:image/svg+xml;base64,${btoa(rocketSVG())}`;
+        const jellyfishSVG = () => ` <svg width="60" height="80" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="jellyGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="30%"> <stop offset="0%" stop-color="#fbcfe8" /> <stop offset="100%" stop-color="#f472b6" /> </radialGradient> </defs> <path d="M 10 30 C 0 40, 0 20, 10 10 C 20 0, 40 0, 50 10 C 60 20, 60 40, 50 30 Z" fill="url(#jellyGrad)" stroke="#db2777" stroke-width="2.5" opacity="0.8"/> <line x1="15" y1="30" x2="10" y2="70" stroke="#f472b6" stroke-width="2"/> <line x1="25" y1="30" x2="25" y2="75" stroke="#f472b6" stroke-width="2"/> <line x1="35" y1="30" x2="35" y2="75" stroke="#f472b6" stroke-width="2"/> <line x1="45" y1="30" x2="50" y2="70" stroke="#f472b6" stroke-width="2"/> </svg>`;
+        const jellyfishImage = new Image(); jellyfishImage.src = `data:image/svg+xml;base64,${btoa(jellyfishSVG())}`;
+        const sharkSVG = () => ` <svg width="140" height="70" viewBox="0 0 140 70" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 5)"> <path d="M 10 40 C 0 30, 10 20, 20 20 C 40 15, 60 15, 80 20 C 100 25, 110 10, 115 20 C 120 30, 135 35, 130 40 C 120 50, 100 45, 80 45 C 60 50, 40 50, 10 40 Z" fill="#94a3b8" stroke="#475569" stroke-width="3"/> <path d="M 80 20 C 75 10, 85 10, 80 20" fill="#94a3b8" stroke="#475569" stroke-width="2"/> <path d="M 115 40 C 125 45, 125 35, 115 40" fill="#94a3b8" stroke="#475569" stroke-width="2"/> <path d="M 30 45 C 25 55, 35 55, 30 45" fill="#94a3b8" stroke="#475569" stroke-width="2"/> <circle cx="25" cy="28" r="4" fill="white" stroke="#334155" stroke-width="1"/> <circle cx="26" cy="28" r="2" fill="#1e293b"/> </g> </svg>`;
+        const sharkImage = new Image(); sharkImage.src = `data:image/svg+xml;base64,${btoa(sharkSVG())}`;
+        const crabSVG = () => ` <svg width="80" height="60" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(5 5)"> <path d="M 10 20 C 0 30, 0 40, 10 50 L 60 50 C 70 40, 70 30, 60 20 Z" fill="#f87171" stroke="#b91c1c" stroke-width="3"/> <circle cx="25" cy="25" r="4" fill="white" stroke="#7f1d1d" stroke-width="1"/> <circle cx="25" cy="25" r="2" fill="black"/> <circle cx="45" cy="25" r="4" fill="white" stroke="#7f1d1d" stroke-width="1"/> <circle cx="45" cy="25" r="2" fill="black"/> <path d="M 5 25 C -5 15, 10 15, 15 20" fill="#f87171" stroke="#b91c1c" stroke-width="2"/> <path d="M 65 25 C 75 15, 60 15, 55 20" fill="#f87171" stroke="#b91c1c" stroke-width="2"/> <path d="M 10 50 L 5 60" stroke="#b91c1c" stroke-width="2"/> <path d="M 20 50 L 20 60" stroke="#b91c1c" stroke-width="2"/> <path d="M 30 50 L 30 60" stroke="#b91c1c" stroke-width="2"/> <path d="M 40 50 L 40 60" stroke="#b91c1c" stroke-width="2"/> <path d="M 50 50 L 50 60" stroke="#b91c1c" stroke-width="2"/> <path d="M 60 50 L 65 60" stroke="#b91c1c" stroke-width="2"/> </g> </svg>`;
+        const crabImage = new Image(); crabImage.src = `data:image/svg+xml;base64,${btoa(crabSVG())}`;
+        const octopusSVG = () => ` <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(5 0)"> <path d="M 30 10 C 10 10, 10 40, 30 40 L 70 40 C 90 40, 90 10, 70 10 Z" fill="#7e22ce" stroke="#581c87" stroke-width="3"/> <circle cx="35" cy="25" r="5" fill="white" stroke="#4a044e" stroke-width="1"/> <circle cx="35" cy="25" r="2.5" fill="black"/> <circle cx="65" cy="25" r="5" fill="white" stroke="#4a044e" stroke-width="1"/> <circle cx="65" cy="25" r="2.5" fill="black"/> <path d="M 30 40 C 20 60, 20 80, 30 90" fill="none" stroke="#7e22ce" stroke-width="3"/> <path d="M 40 40 C 35 60, 35 80, 40 95" fill="none" stroke="#7e22ce" stroke-width="3"/> <path d="M 50 40 C 50 60, 50 80, 50 90" fill="none" stroke="#7e22ce" stroke-width="3"/> <path d="M 60 40 C 65 60, 65 80, 60 95" fill="none" stroke="#7e22ce" stroke-width="3"/> <path d="M 70 40 C 80 60, 80 80, 70 90" fill="none" stroke="#7e22ce" stroke-width="3"/> </g> </svg>`;
+        const octopusImage = new Image(); octopusImage.src = `data:image/svg+xml;base64,${btoa(octopusSVG())}`;
+        const whaleSVG = () => ` <svg width="250" height="150" viewBox="0 0 250 150" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 10)"> <path d="M 10 70 C 0 50, 10 30, 50 20 C 100 0, 180 0, 220 30 C 240 40, 250 60, 240 70 C 220 100, 180 120, 150 110 C 100 100, 40 100, 10 70 Z" fill="#075985" stroke="#0c4a6e" stroke-width="4"/> <path d="M 220 70 C 240 80, 240 60, 220 70" fill="#075985" stroke="#0c4a6e" stroke-width="3"/> <path d="M 50 100 C 30 110, 40 120, 50 100" fill="#075985" stroke="#0c4a6e" stroke-width="3"/> <path d="M 50 20 C 60 10, 80 15, 70 25" fill="#0369a1"/> <circle cx="40" cy="35" r="6" fill="white" stroke="#082f49" stroke-width="1.5"/> <circle cx="41" cy="35" r="3" fill="#082f49"/> </g> </svg>`;
+        const whaleImage = new Image(); whaleImage.src = `data:image/svg+xml;base64,${btoa(whaleSVG())}`;
+
+
+
+
+        // --- Pop Particle Class (Identical) ---
+        class PopParticle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.size = Math.random() * 10 + 5;
+                this.speedX = Math.random() * 6 - 3;
+                this.speedY = Math.random() * -3 - 1;
+                this.color = color;
+                this.life = 100;
+                this.gravity = 0.1;
+                this.opacity = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.life -= 2;
+                this.opacity = this.life / 100;
+            }
+            draw() {
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+        function createPopEffect(x, y, color) {
+            playPopSound();
+            let particleColor = 'rgba(200, 230, 255, 0.7)';
+            for (let i = 0; i < 15; i++) {
+                particles.push(new PopParticle(x, y, particleColor));
+            }
+        }
+
+
+        // --- Game Mechanics ---
+        function resizeCanvas() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            if (player) {
+                player.baseY = canvasHeight / 1.5;
+                player.targetY = player.y || player.baseY;
+            }
+        }
+
+
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.textContent = score;
+
+
+            // --- Dynamic Threat Unlocking ---
+            // Unlock Jellyfish at 50
+            if (score >= 50 && LEVEL_SETTINGS.jellyfishSpawnRate === 0) {
+                LEVEL_SETTINGS.jellyfishSpawnRate = 300; 
+            }
+
+
+            // Trigger Rocket Event at 50, then 100, 200, 300...
+            if (!rocketEventActive && (score === 50 || (score > 50 && score % 100 === 0))) {
+                triggerRocketEvent();
+            }
+        }
+
+
+        function updateLivesDisplay() {
+            livesDisplay.textContent = '❤️'.repeat(lives);
+            if (lives >= MAX_LIVES) {
+                buyLifeButton.disabled = true;
+            } else {
+                buyLifeButton.disabled = !gameRunning;
+            }
+        }
+
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            frame = 0;
+            bubbles = []; redBalloons = []; powerUps = []; dolphins = [];
+            particles = []; heartBalloons = []; turtles = [];
+            jellyfish = []; sharks = []; crabs = []; octopi = []; whales = [];
+            
+            player.isPuffed = false;
+            player.hasMuffler = false;
+            player.isInvisible = false;
+            player.puffTimer = 0;
+            player.mufflerTimer = 0;
+            player.invisibleTimer = 0;
+            
+            if(player.baseY) {
+                player.targetY = player.baseY;
+                player.y = player.baseY;
+            } else {
+                resizeCanvas();
+                player.x = canvasWidth / 2;
+                player.targetX = canvasWidth / 2;
+                player.targetY = player.baseY;
+                player.y = player.baseY;
+            }
+            player.isInvincible = false;
+            player.invincibleTimer = 0;
+            
+            milestoneCounter = 0;
+            rocketEventActive = false;
+            LEVEL_SETTINGS.bubbleSpeed = INITIAL_BUBBLE_SPEED;
+            LEVEL_SETTINGS.jellyfishSpawnRate = 0;
+            LEVEL_SETTINGS.sharkSpawnRate = 0;
+            LEVEL_SETTINGS.crabSpawnRate = 0;
+            LEVEL_SETTINGS.octopusSpawnRate = 0;
+            LEVEL_SETTINGS.whaleSpawnRate = 0;
+
+
+            updateScore(0);
+            updateLivesDisplay();
+            puffTimer.style.display = 'none';
+            invisibilityTimer.style.display = 'none';
+            mufflerTimer.style.display = 'none';
+            paywallModal.style.display = 'none';
+            rocketModal.style.display = 'none';
+        }
+
+
+        function startGame() {
+            resetGame();
+            gameRunning = true;
+            startModal.style.display = 'none';
+            paywallModal.style.display = 'none';
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            gameLoop();
+        }
+
+
+        function gameOver() {
+            gameRunning = false;
+            startModal.style.display = 'block';
+            buyLifeButton.disabled = true;
+        }
+
+
+        function playerHit() {
+            if (player.isInvincible) return; 
+            lives--;
+            updateLivesDisplay();
+            playMineSound();
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                player.isInvincible = true; 
+                player.invincibleTimer = player.invincibleDuration;
+            }
+        }
+
+
+        // --- Rocket Event Functions ---
+        function triggerRocketEvent() {
+            gameRunning = false;
+            rocketEventActive = true; 
+            milestoneCounter++;
+
+
+            playRocketSound();
+            rocketModalText.textContent = 'Powering up...';
+            resumeGameButton.style.display = 'none';
+            rocketSVGContainer.classList.add('shaking');
+            rocketModal.style.display = 'flex';
+
+
+            setTimeout(() => {
+                rocketSVGContainer.classList.remove('shaking');
+                rocketModalText.textContent = 'BOOST COMPLETE!';
+                resumeGameButton.style.display = 'block';
+            }, 3000); // 3 seconds
+        }
+
+
+        function resumeFromRocket() {
+            gameRunning = true;
+            rocketModal.style.display = 'none';
+
+
+            // Increase difficulty
+            LEVEL_SETTINGS.bubbleSpeed += 0.2;
+
+
+            // Unlock next threat
+            // milestoneCounter is 1 at score 50
+            if (milestoneCounter === 1 && LEVEL_SETTINGS.sharkSpawnRate === 0) {
+                LEVEL_SETTINGS.sharkSpawnRate = 450; 
+            } 
+            // milestoneCounter is 2 at score 100
+            else if (milestoneCounter === 2 && LEVEL_SETTINGS.crabSpawnRate === 0) {
+                LEVEL_SETTINGS.crabSpawnRate = 350; 
+            } 
+            // milestoneCounter is 3 at score 200
+            else if (milestoneCounter === 3 && LEVEL_SETTINGS.octopusSpawnRate === 0) {
+                LEVEL_SETTINGS.octopusSpawnRate = 500; 
+            } 
+            // milestoneCounter is 4 at score 300
+            else if (milestoneCounter >= 4 && LEVEL_SETTINGS.whaleSpawnRate === 0) {
+                LEVEL_SETTINGS.whaleSpawnRate = 1200; 
+            }
+            
+            gameLoop();
+        }
+
+
+        // --- === CHANGED: Spawning Logic with Slow Mode === ---
+        function spawnObjects() {
+            // === NEW: Multipliers for "Slow Mode" (0-50 points) ===
+            // Slower speeds (70% of normal)
+            let speedMultiplier = (score < 50) ? 0.7 : 1.0; 
+            // Slower spawns (1.5x longer, i.e., less frequent)
+            let spawnMultiplier = (score < 50) ? 1.5 : 1.0; 
+
+
+            // Bubbles
+            if (frame % LEVEL_SETTINGS.bubbleSpawnRate === 0) {
+                const size = Math.random() * 15 + 15;
+                bubbles.push({ x: Math.random() * canvasWidth, y: canvasHeight + 50, radius: size, img: bubbleImage, 
+                    speed: (LEVEL_SETTINGS.bubbleSpeed + Math.random() * 0.5) * speedMultiplier, // Apply speed mod
+                    wobble: Math.random() * 2 - 1, wobbleSpeed: Math.random() * 0.05 + 0.02 });
+            }
+            // Red Balloons
+            if (frame % Math.floor(LEVEL_SETTINGS.redBalloonSpawnRate * spawnMultiplier) === 0) { // Apply spawn mod
+                redBalloons.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: redBalloonImage, 
+                    speed: (LEVEL_SETTINGS.redBalloonSpeed + Math.random() * 0.5) * speedMultiplier // Apply speed mod
+                });
+            }
+            // Power-ups
+            if (frame % LEVEL_SETTINGS.powerUpSpawnRate === 0) {
+                const typeRoll = Math.random();
+                let type, img;
+                if (typeRoll < 0.33) { type = 0; img = flowerImage; }
+                else if (typeRoll < 0.66) { type = 1; img = starImage; }
+                else { type = 2; img = yellowFlowerImage; }
+                powerUps.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: img, type: type, 
+                    speed: (LEVEL_SETTINGS.powerUpSpeed + Math.random() * 0.5) * speedMultiplier // Apply speed mod
+                });
+            }
+            // Dolphins
+            if (frame % Math.floor(LEVEL_SETTINGS.dolphinSpawnRate * spawnMultiplier) === 0) { // Apply spawn mod
+                dolphins.push({ x: -100, y: Math.random() * (canvasHeight - 200), radius: 35, img: dolphinImage, 
+                    speed: (Math.random() * 2 + 2) * speedMultiplier // Apply speed mod
+                });
+            }
+            // Hearts
+            if (frame % LEVEL_SETTINGS.heartBalloonSpawnRate === 0) { // No spawn mod, they are rare enough
+                heartBalloons.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: heartBalloonImage, 
+                    speed: LEVEL_SETTINGS.powerUpSpeed * speedMultiplier // Apply speed mod
+                });
+            }
+            // Turtles
+            if (frame % Math.floor(LEVEL_SETTINGS.turtleSpawnRate * spawnMultiplier) === 0) { // Apply spawn mod
+                turtles.push({ x: canvasWidth + 100, y: Math.random() * (canvasHeight - 200), radius: 30, img: turtleImage, 
+                    speed: ((LEVEL_SETTINGS.redBalloonSpeed * 0.8) + Math.random() * 0.5) * speedMultiplier // Apply speed mod
+                }); 
+            }
+            
+            // --- NEW THREAT SPAWNING (These only start >= 50, so they are unaffected by mods) ---
+            if (LEVEL_SETTINGS.jellyfishSpawnRate > 0 && frame % LEVEL_SETTINGS.jellyfishSpawnRate === 0) {
+                jellyfish.push({ x: Math.random() * canvasWidth, y: canvasHeight + 50, radius: 30, img: jellyfishImage, speed: 1.2 + Math.random() * 0.3, wobble: Math.random() * 1.5 - 0.75, wobbleSpeed: Math.random() * 0.05 + 0.02 });
+            }
+            if (LEVEL_SETTINGS.sharkSpawnRate > 0 && frame % LEVEL_SETTINGS.sharkSpawnRate === 0) {
+                sharks.push({ x: -140, y: Math.random() * (canvasHeight - 150), radius: 45, img: sharkImage, speed: 3.0 + Math.random() * 0.5 });
+            }
+            if (LEVEL_SETTINGS.crabSpawnRate > 0 && frame % LEVEL_SETTINGS.crabSpawnRate === 0) {
+                crabs.push({ x: -80, y: canvasHeight - 40, radius: 30, img: crabImage, speed: 2.0 + Math.random() * 0.3 });
+            }
+            if (LEVEL_SETTINGS.octopusSpawnRate > 0 && frame % LEVEL_SETTINGS.octopusSpawnRate === 0) {
+                octopi.push({ x: Math.random() * canvasWidth, y: canvasHeight + 60, radius: 40, img: octopusImage, speed: 1.5 + Math.random() * 0.3 });
+            }
+            if (LEVEL_SETTINGS.whaleSpawnRate > 0 && frame % LEVEL_SETTINGS.whaleSpawnRate === 0) {
+                whales.push({ x: -250, y: Math.random() * (canvasHeight - 250), radius: 80, img: whaleImage, speed: 0.8 + Math.random() * 0.2 });
+            }
+        }
+
+
+        // --- updatePlayer (Identical) ---
+        function updatePlayer() {
+            player.x += (player.targetX - player.x) * player.lerpFactor;
+            player.y += (player.targetY - player.y) * player.lerpFactor;
+
+
+            if (player.isPuffed) {
+                player.puffTimer -= 1000 / 60;
+                const timerPercent = (player.puffTimer / player.puffDuration) * 100;
+                puffTimerBar.style.width = `${timerPercent}%`;
+                if (player.puffTimer <= 0) {
+                    player.isPuffed = false;
+                    puffTimer.style.display = 'none';
+                }
+            }
+            if (player.hasMuffler) {
+                player.mufflerTimer -= 1000 / 60;
+                const timerPercent = (player.mufflerTimer / player.mufflerDuration) * 100;
+                mufflerTimerBar.style.width = `${timerPercent}%`;
+                if (player.mufflerTimer <= 0) {
+                    player.hasMuffler = false;
+                    mufflerTimer.style.display = 'none';
+                }
+            }
+            if (player.isInvincible) {
+                player.invincibleTimer -= 1000 / 60;
+                if (player.invincibleTimer <= 0) {
+                    player.isInvincible = false;
+                }
+            }
+            if (player.isInvisible) {
+                player.invisibleTimer -= 1000 / 60;
+                const timerPercent = (player.invisibleTimer / player.invisibleDuration) * 100;
+                invisibilityTimerBar.style.width = `${timerPercent}%`;
+                if (player.invisibleTimer <= 0) {
+                    player.isInvisible = false;
+                    invisibilityTimer.style.display = 'none';
+                }
+            }
+        }
+
+
+        // --- updateObjects (Identical, logic is speed-agnostic) ---
+        function updateObjects() {
+            const playerHitbox = { x: player.x, y: player.y, radius: player.radius };
+            
+            // Bubbles
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                bubbles[i].y -= bubbles[i].speed; // Speed was set at spawn
+                bubbles[i].x += Math.sin(frame * bubbles[i].wobbleSpeed) * bubbles[i].wobble;
+                if (bubbles[i].y < -50) {
+                    bubbles.splice(i, 1); continue;
+                }
+                if (checkCollision(playerHitbox, bubbles[i])) {
+                    if (player.isPuffed || player.hasMuffler || player.isInvisible) {
+                        createPopEffect(bubbles[i].x, bubbles[i].y, bubbles[i].color);
+                        updateScore(1);
+                        bubbles.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Red Balloons (DANGER: Always hit)
+            for (let i = redBalloons.length - 1; i >= 0; i--) {
+                redBalloons[i].y -= redBalloons[i].speed; // Speed was set at spawn
+                if (redBalloons[i].y < -40) {
+                    redBalloons.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && checkCollision(playerHitbox, redBalloons[i])) {
+                    playerHit();
+                    redBalloons.splice(i, 1);
+                    if (!gameRunning) return; continue;
+                }
+            }
+            
+            // Turtles (Safe from Star & Invisibility)
+            for (let i = turtles.length - 1; i >= 0; i--) {
+                turtles[i].x -= turtles[i].speed; // Speed was set at spawn
+                if (turtles[i].x < -100) {
+                    turtles.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, turtles[i])) {
+                    playerHit();
+                    turtles.splice(i,1);
+                    if (!gameRunning) return; continue;
+                }
+            }
+            
+            // Dolphins (Safe from Star & Invisibility)
+            for (let i = dolphins.length - 1; i >= 0; i--) {
+                dolphins[i].x += dolphins[i].speed; // Speed was set at spawn
+                if (dolphins[i].x > canvasWidth + 100) {
+                    dolphins.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, dolphins[i])) {
+                    playerHit();
+                    if (!gameRunning) return;
+                }
+            }
+            
+            // --- NEW THREATS (Safe from Star ONLY) ---
+            // Jellyfish
+            for (let i = jellyfish.length - 1; i >= 0; i--) {
+                jellyfish[i].y -= jellyfish[i].speed;
+                jellyfish[i].x += Math.sin(frame * jellyfish[i].wobbleSpeed) * jellyfish[i].wobble;
+                if (jellyfish[i].y < -80) {
+                    jellyfish.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.hasMuffler && checkCollision(playerHitbox, jellyfish[i])) {
+                    playerHit();
+                    jellyfish.splice(i, 1);
+                    if (!gameRunning) return; continue;
+                }
+            }
+            // Sharks
+            for (let i = sharks.length - 1; i >= 0; i--) {
+                sharks[i].x += sharks[i].speed;
+                if (sharks[i].x > canvasWidth + 140) {
+                    sharks.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.hasMuffler && checkCollision(playerHitbox, sharks[i])) {
+                    playerHit();
+                    if (!gameRunning) return;
+                }
+            }
+            // Crabs
+            for (let i = crabs.length - 1; i >= 0; i--) {
+                crabs[i].x += crabs[i].speed;
+                if (crabs[i].x > canvasWidth + 80) {
+                    crabs.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.hasMuffler && checkCollision(playerHitbox, crabs[i])) {
+                    playerHit();
+                    crabs.splice(i, 1);
+                    if (!gameRunning) return; continue;
+                }
+            }
+            // Octopi
+            for (let i = octopi.length - 1; i >= 0; i--) {
+                octopi[i].y -= octopi[i].speed;
+                if (octopi[i].y < -100) {
+                    octopi.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.hasMuffler && checkCollision(playerHitbox, octopi[i])) {
+                    playerHit();
+                    octopi.splice(i, 1);
+                    if (!gameRunning) return; continue;
+                }
+            }
+            // Whales
+            for (let i = whales.length - 1; i >= 0; i--) {
+                whales[i].x += whales[i].speed;
+                if (whales[i].x > canvasWidth + 250) {
+                    whales.splice(i, 1); continue;
+                }
+                if (!player.isInvincible && !player.hasMuffler && checkCollision(playerHitbox, whales[i])) {
+                    playerHit();
+                    if (!gameRunning) return;
+                }
+            }
+
+
+            // Power-ups
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                powerUps[i].y -= powerUps[i].speed; // Speed was set at spawn
+                if (powerUps[i].y < -40) {
+                    powerUps.splice(i, 1); continue;
+                }
+                if (checkCollision(playerHitbox, powerUps[i])) {
+                    if (powerUps[i].type === 0) { // Puff
+                        playPowerUpSound();
+                        player.isPuffed = true;
+                        player.puffTimer = player.puffDuration;
+                        puffTimer.style.display = 'block';
+                    } else if (powerUps[i].type === 1) { // Star
+                        playPowerUpSound();
+                        player.hasMuffler = true;
+                        player.mufflerTimer = player.mufflerDuration;
+                        mufflerTimer.style.display = 'block';
+                    } else if (powerUps[i].type === 2) { // Invisibility
+                        playInvisibilitySound();
+                        player.isInvisible = true;
+                        player.invisibleTimer = player.invisibleDuration;
+                        invisibilityTimer.style.display = 'block';
+                    }
+                    powerUps.splice(i, 1);
+                }
+            }
+
+
+            // Hearts
+            for (let i = heartBalloons.length - 1; i >= 0; i--) {
+                heartBalloons[i].y -= heartBalloons[i].speed; // Speed was set at spawn
+                if (heartBalloons[i].y < -40) {
+                    heartBalloons.splice(i, 1); continue;
+                }
+                if (checkCollision(playerHitbox, heartBalloons[i])) {
+                    if(lives < MAX_EARNED_LIVES) {
+                        playHeartSound();
+                        lives++;
+                        updateLivesDisplay();
+                    } else {
+                        playPopSound();
+                    }
+                    heartBalloons.splice(i, 1);
+                }
+            }
+
+
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+
+        // --- checkCollision (Identical) ---
+        function checkCollision(obj1, obj2) {
+            const dx = obj1.x - obj2.x;
+            const dy = obj1.y - obj2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < obj1.radius + obj2.radius;
+        }
+
+
+        // --- Draw Function (Identical) ---
+        function draw() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            
+            bubbles.forEach(b => ctx.drawImage(b.img, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2));
+            redBalloons.forEach(m => ctx.drawImage(m.img, m.x - m.radius, m.y - m.radius, m.radius * 2, m.radius * 2));
+            powerUps.forEach(p => ctx.drawImage(p.img, p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2));
+            dolphins.forEach(d => ctx.drawImage(d.img, d.x - d.radius, d.y - d.radius, d.radius * 2.8, d.radius * 1.8));
+            heartBalloons.forEach(h => ctx.drawImage(h.img, h.x - h.radius, h.y - h.radius, h.radius * 2, h.radius * 2.4));
+            turtles.forEach(t => ctx.drawImage(t.img, t.x - t.radius, t.y - t.radius, t.radius * 2.6, t.radius * 2));
+            jellyfish.forEach(j => ctx.drawImage(j.img, j.x - j.radius, j.y - j.radius, j.radius * 2, j.radius * 2.6));
+            sharks.forEach(s => ctx.drawImage(s.img, s.x - s.radius, s.y - s.radius, s.radius * 3.1, s.radius * 1.5));
+            crabs.forEach(c => ctx.drawImage(c.img, c.x - c.radius, c.y - c.radius, c.radius * 2.6, c.radius * 2));
+            octopi.forEach(o => ctx.drawImage(o.img, o.x - o.radius, o.y - o.radius, o.radius * 2, o.radius * 2));
+            whales.forEach(w => ctx.drawImage(w.img, w.x - w.radius, w.y - w.radius, w.radius * 3.1, w.radius * 1.8));
+
+
+            let currentImage = playerImageNormal;
+            if (player.isPuffed && player.hasMuffler) currentImage = playerImagePuffedMuffler;
+            else if (player.isPuffed) currentImage = playerImagePuffed;
+            else if (player.hasMuffler) currentImage = playerImageMuffler;
+            
+            ctx.save();
+            if (player.isInvincible) { // Hit flash
+                if (frame % 10 < 5) { ctx.globalAlpha = 0.5; }
+            } else if (player.isInvisible) { // Cloak
+                ctx.globalAlpha = 0.35;
+            } else if (player.hasMuffler) { // Star flash
+                ctx.globalAlpha = (Math.sin(frame * 0.5) * 0.3) + 0.7;
+            }
+            const drawSize = 80;
+            ctx.drawImage(currentImage, player.x - (drawSize/2), player.y - (drawSize/2), drawSize, drawSize);
+            ctx.restore();
+            
+            particles.forEach(p => p.draw());
+        }
+
+
+        // --- gameLoop (Updated) ---
+        function gameLoop() {
+            // Unlatch logic for new rocket schedule
+            if (rocketEventActive && score !== 50 && score % 100 !== 0) {
+                rocketEventActive = false;
+            }
+
+
+            if (!gameRunning) return;
+            
+            spawnObjects();
+            updatePlayer();
+            updateObjects();
+            draw();
+            
+            frame++;
+            requestAnimationFrame(gameLoop);
+        }
+
+
+        // --- Event Listeners (Identical) ---
+        function handleMove(clientX, clientY) {
+            player.targetX = clientX;
+            player.targetY = clientY;
+        }
+
+
+        // --- Logo Particle System (Identical) ---
+        let logoParticles = [];
+        let pCanvasWidth, pCanvasHeight;
+        function resizeParticleCanvas() {
+            if (!particleCanvas) return;
+            const modal = particleCanvas.parentElement;
+            pCanvasWidth = modal.clientWidth;
+            pCanvasHeight = modal.clientHeight;
+            if(pCanvasWidth === 0 || pCanvasHeight === 0) {
+                const tempModal = document.querySelector("#startModal .modal-inner");
+                if(tempModal) {
+                    pCanvasWidth = tempModal.clientWidth;
+                    pCanvasHeight = tempModal.clientHeight;
+                }
+            }
+            if (pCtx) {
+                particleCanvas.width = pCanvasWidth;
+                particleCanvas.height = pCanvasHeight;
+            }
+        }
+        class LogoParticle {
+            constructor() {
+                this.x = Math.random() * pCanvasWidth;
+                this.y = pCanvasHeight + Math.random() * 50;
+                this.radius = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.radius) {
+                    this.y = pCanvasHeight + this.radius;
+                    this.x = Math.random() * pCanvasWidth;
+                }
+            }
+            draw() {
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                pCtx.fill();
+            }
+        }
+        function initParticles() {
+            resizeParticleCanvas();
+            logoParticles = [];
+            for (let i = 0; i < 20; i++) {
+                logoParticles.push(new LogoParticle());
+            }
+        }
+        let particleAnimationId;
+        function animateParticles() {
+            if (!pCtx) return;
+            pCtx.clearRect(0, 0, pCanvasWidth, pCanvasHeight);
+            logoParticles.forEach(p => { p.update(); p.draw(); });
+            particleAnimationId = requestAnimationFrame(animateParticles);
+        }
+
+
+        // --- init (Identical) ---
+        function init() {
+            startModal = document.getElementById('startModal');
+            startButton = document.getElementById('startButton');
+            scoreDisplay = document.getElementById('scoreDisplay');
+            muteButton = document.getElementById('muteButton');
+            puffTimer = document.getElementById('puffTimer');
+            puffTimerBar = document.getElementById('puffTimerBar');
+            logoPuffer = document.getElementById('logoPuffer');
+            livesDisplay = document.getElementById('livesDisplay');
+            invisibilityTimer = document.getElementById('invisibilityTimer');
+            invisibilityTimerBar = document.getElementById('invisibilityTimerBar');
+            mufflerTimer = document.getElementById('mufflerTimer');
+            mufflerTimerBar = document.getElementById('mufflerTimerBar');
+            paywallModal = document.getElementById('paywallModal');
+            buyLifeButton = document.getElementById('buyLifeButton');
+            closePaywallButton = document.getElementById('closePaywallButton');
+            confirmPurchaseButton = document.getElementById('confirmPurchaseButton');
+            maxLivesMessage = document.getElementById('maxLivesMessage');
+            particleCanvas = document.getElementById('particleCanvas');
+            pCtx = particleCanvas.getContext('2d');
+            
+            rocketModal = document.getElementById('rocketModal');
+            resumeGameButton = document.getElementById('resumeGameButton');
+            rocketSVGContainer = document.getElementById('rocketSVGContainer');
+            rocketModalText = document.getElementById('rocketModalText');
+            rocketSVGContainer.innerHTML = rocketSVG();
+            logoPuffer.src = playerImageNormal.src;
+            resizeCanvas();
+            player.x = canvasWidth / 2;
+            player.targetX = canvasWidth / 2;
+            updateLivesDisplay();
+
+
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            canvas.addEventListener('mousemove', (e) => { handleMove(e.clientX, e.clientY); });
+            startButton.addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); });
+            startButton.addEventListener('click', startGame);
+            resumeGameButton.addEventListener('click', resumeFromRocket);
+            
+            muteButton.addEventListener('click', () => {
+                isMuted = !isMuted;
+                muteButton.textContent = isMuted ? '🔇' : '🔊';
+            });
+            
+            buyLifeButton.addEventListener('click', () => {
+                gameRunning = false;
+                if (lives >= MAX_LIVES) {
+                    confirmPurchaseButton.style.display = 'none';
+                    maxLivesMessage.style.display = 'block';
+                } else {
+                    confirmPurchaseButton.style.display = 'block';
+                    maxLivesMessage.style.display = 'none';
+                }
+                paywallModal.style.display = 'flex';
+            });
+            
+            closePaywallButton.addEventListener('click', () => {
+                paywallModal.style.display = 'none';
+                if (!rocketEventActive) { // Don't resume if rocket modal is up
+                    gameRunning = true; 
+                    requestAnimationFrame(gameLoop);
+                }
+            });
+            
+            confirmPurchaseButton.addEventListener('click', () => {
+                if(lives < MAX_LIVES) {
+                    lives++;
+                    updateLivesDisplay();
+                    playHeartSound();
+                }
+                paywallModal.style.display = 'none';
+                if (!rocketEventActive) { // Don't resume if rocket modal is up
+                    gameRunning = true; 
+                    requestAnimationFrame(gameLoop);
+                }
+            });
+            
+            window.addEventListener('resize', resizeCanvas);
+            
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
+            }, 100);
+        }
+
+
+        window.onload = init;
+    </script>
+</body>
+</html>

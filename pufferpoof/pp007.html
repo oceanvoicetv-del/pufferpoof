@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <title>Puffer Poof - Level 7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+    <style>
+        html, body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; overflow: hidden; background-color: #312e81; color: #e0e7ff; font-family: 'Bangers', cursive; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        #arcadeFrame { width: 100%; height: 100%; border: 20px solid #4338ca; border-bottom-width: 60px; box-shadow: inset 0 0 15px 5px rgba(0,0,0,0.4); position: relative; box-sizing: border-box; }
+        @media (max-width: 600px) { #arcadeFrame { border: none; } }
+        #gameWrapper { width: 100%; height: 100%; overflow: hidden; position: relative; touch-action: none; }
+        canvas { display: block; background: linear-gradient(to bottom, #4f46e5, #4338ca, #312e81); width: 100%; height: 100%; touch-action: none; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        #startModal, #levelCompleteModal, #rocketModal { display: none; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 400px; z-index: 100; }
+        @keyframes subtleBob { 0% { transform: translateY(0px); } 50% { transform: translateY(-3px); } 100% { transform: translateY(0px); } }
+        @keyframes subtleBobOOF { 0% { transform: translateY(0px); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0px); } }
+        @keyframes pulseGlow { 0% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; } 50% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 20px #fde047; } 100% { text-shadow: 3px 3px 0px rgba(0,0,0,0.4), 0 0 10px #fde047; } }
+        @keyframes animatedBackground { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+        
+        .modal-inner { background: linear-gradient( -45deg, #4f46e5, #4338ca, #312e81, #4338ca, #4f46e5 ); background-size: 400% 400%; animation: animatedBackground 15s ease infinite; border: 4px solid #c7d2fe; border-radius: 1.5rem; padding: 1.5rem 0.5rem 1rem 0.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
+        #particleCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .modal-content { position: relative; z-index: 2; }
+        .baseline-text { font-size: 5rem; line-height: 1; letter-spacing: -0.025em; transform: scale(1, 1); margin-top: 0; margin-bottom: 0.2rem; transition: all 0.3s ease; }
+        .modal-content h1 { color: #fde047; margin: 0; animation: pulseGlow 3s ease-in-out infinite; }
+        #poof-line { display: flex; align-items: center; justify-content: center; margin-top: -1rem; margin-bottom: -1rem; transform: scale(0.85); transform-origin: top center; }
+        .logo-p-container { position: relative; width: 100px; height: 115px; margin-right: -30px; z-index: 10; animation: subtleBob 4s ease-in-out infinite; }
+        .logo-p-svg { width: 100px; height: 115px; }
+        #logoPuffer { position: absolute; width: 58px; height: 58px; top: 25px; left: 28px; z-index: 5; }
+        .oof-container { display: flex; align-items: center; justify-content: center; padding-left: 8px; animation: subtleBobOOF 3.8s ease-in-out infinite; }
+        .logo-o { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3.2rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 4px -4px 8px rgba(255,255,255,0.3); position: relative; }
+        .logo-o::after { content: ''; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); width: 2px; height: 16px; background: white; opacity: 0.7; }
+        .logo-f-container { width: 75px; height: 115px; margin-left: -15px; animation: subtleBobOOF 3.8s ease-in-out infinite; animation-delay: -0.1s; }
+        .logo-f-svg { width: 75px; height: 115px; }
+        
+        button, a { touch-action: manipulation; }
+        #startButton { font-family: 'Bangers', cursive; font-size: 2.2rem; letter-spacing: 0.05em; color: #312e81; background: #c7d2fe; border: 3px solid #312e81; border-radius: 1rem; padding: 0.3rem 2rem; margin-top: 0.5rem; box-shadow: 0 5px 0 #818cf8, 0 8px 10px rgba(0,0,0,0.3); transition: all 0.1s ease-out; cursor: pointer; }
+        #startButton:active { transform: translateY(3px); box-shadow: 0 2px 0 #818cf8, 0 5px 5px rgba(0,0,0,0.3); }
+        .back-button { display: block; font-family: sans-serif; font-size: 1rem; color: #d1d5db; text-decoration: underline; margin-top: 0.5rem; opacity: 0.8; transition: opacity 0.2s; cursor: pointer; }
+        .back-button:hover { opacity: 1; }
+        
+        /* --- IN-GAME UI --- */
+        #uiLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
+        /* VANGUARD FIX: Dynamic safe-area bounds for maximum mobile visibility */
+        #scoreDisplay { position: absolute; top: max(15px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); font-size: 3.5rem; color: white; text-shadow: 3px 3px 0 #312e81; }
+        #livesDisplay { position: absolute; top: max(15px, env(safe-area-inset-top)); left: max(15px, env(safe-area-inset-left)); font-size: 2.5rem; color: #f472b6; text-shadow: 2px 2px 0 #312e81; letter-spacing: 0.1em; }
+        #muteButton { position: absolute; top: max(15px, env(safe-area-inset-top)); right: max(15px, env(safe-area-inset-right)); font-size: 1.8rem; background: rgba(0,0,0,0.4); border: 2px solid white; color: white; border-radius: 50%; width: 55px; height: 55px; z-index: 999; pointer-events: all; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        #levelCompleteModal, #rocketModal { background-color: rgba(67, 56, 202, 0.9); border: 4px solid #c7d2fe; border-radius: 1.5rem; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); width: 90%; max-width: 380px; z-index: 200; pointer-events: all; }
+        .modal-title { font-size: 4rem; color: #c7d2fe; text-shadow: 3px 3px 0px rgba(0,0,0,0.4); margin: 0 0 1rem 0; line-height: 1; }
+        .modal-text { font-size: 1.5rem; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); margin-bottom: 1.5rem; }
+        .modal-button { font-family: 'Bangers', cursive; font-size: 2rem; letter-spacing: 0.05em; color: #312e81; background: #c7d2fe; border: 3px solid #312e81; border-radius: 1rem; padding: 0.5rem 1.5rem; box-shadow: 0 5px 0 #818cf8, 0 8px 10px rgba(0,0,0,0.3); transition: all 0.1s ease-out; cursor: pointer; text-decoration: none; display: inline-block;}
+        
+        #timerContainer { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 80%; max-width: 300px; display: flex; flex-direction: column; gap: 8px; z-index: 9; }
+        #puffTimer, #invisibilityTimer, #mufflerTimer { width: 100%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; display: none; overflow: hidden; }
+        #puffTimer { border: 2px solid white; }
+        #invisibilityTimer { border: 2px solid #fde047; }
+        #mufflerTimer { border: 2px solid #ec4899; }
+        #puffTimerBar, #invisibilityTimerBar, #mufflerTimerBar { width: 100%; height: 100%; border-radius: 7px; }
+        #puffTimerBar { background: linear-gradient(to right, #f472b6, #ec4899); }
+        #invisibilityTimerBar { background: linear-gradient(to right, #fef08a, #fde047); }
+        #mufflerTimerBar { background: linear-gradient(to right, #f9a8d4, #f472b6); }
+
+        #rocketSVGContainer { width: 150px; height: 150px; margin: -1rem 0 1rem 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+        @keyframes shake {
+           0% { transform: translate(1px, 1px) rotate(0deg); }
+           10% { transform: translate(-1px, -2px) rotate(-1deg); }
+           20% { transform: translate(-3px, 0px) rotate(1deg); }
+           30% { transform: translate(3px, 2px) rotate(0deg); }
+           40% { transform: translate(1px, -1px) rotate(1deg); }
+           50% { transform: translate(-1px, 2px) rotate(-1deg); }
+           60% { transform: translate(-3px, 1px) rotate(0deg); }
+           70% { transform: translate(3px, 1px) rotate(-1deg); }
+           80% { transform: translate(-1px, -1px) rotate(1deg); }
+           90% { transform: translate(1px, 2px) rotate(0deg); }
+           100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shaking { animation: shake 0.5s infinite; }
+    </style>
+</head>
+<body>
+    <div id="arcadeFrame">
+        <div id="gameWrapper">
+            <canvas id="gameCanvas"></canvas>
+            <div id="uiLayer">
+                <button id="muteButton">🔊</button>
+                <div id="livesDisplay"></div>
+                <div id="scoreDisplay">0</div>
+                <div id="timerContainer">
+                    <div id="invisibilityTimer"> <div id="invisibilityTimerBar"></div> </div>
+                    <div id="mufflerTimer"> <div id="mufflerTimerBar"></div> </div>
+                    <div id="puffTimer"> <div id="puffTimerBar"></div> </div>
+                </div>
+
+                <div id="levelCompleteModal">
+                    <h2 class="modal-title">LEVEL 7<br>COMPLETE!</h2>
+                    <p class="modal-text">The deep dark awaits... something is stirring.</p>
+                    <a href="pp8.html" class="modal-button" id="nextLevelButton">Go to Level 8</a>
+                </div>
+
+                <div id="rocketModal">
+                    <h2 class="modal-title">WARNING!</h2>
+                    <div id="rocketSVGContainer"> </div>
+                    <p id="rocketModalText" class="modal-text">NEW THREAT DETECTED!</p>
+                </div>
+            </div>
+            
+            <div id="startModal">
+                <div class="modal-inner">
+                    <canvas id="particleCanvas"></canvas>
+                    <div class="modal-content">
+                        <h1 class="baseline-text" id="mainTitle">PUFFER</h1>
+                        <div id="poof-line">
+                            <div class="logo-p-container">
+                                <svg id="logoPSVG" class="logo-p-svg" viewBox="10 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                                    <defs> <radialGradient id="tridentGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#fde047; stop-opacity:1" /> <stop offset="100%" style="stop-color:#facc15; stop-opacity:1" /> </radialGradient> </defs>
+                                    <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > P </text>
+                                </svg>
+                                <img src="" id="logoPuffer" alt="Puffer">
+                            </div>
+                            <div class="oof-container">
+                                <div class="logo-o" style="background-color: #f472b6; margin-right: -8px; z-index: 2; animation-delay: -0.2s;"></div>
+                                <div class="logo-o" style="background-color: #3b82f6; z-index: 1;"></div>
+                                <div class="logo-f-container">
+                                    <svg class="logo-f-svg" viewBox="10 0 70 110" xmlns="http://www.w3.org/2000/svg">
+                                        <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > F </text>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <h2 style="font-family: 'Bangers', cursive; font-size: 2.2rem; color: #c7d2fe; text-shadow: 3px 3px 0 #312e81; margin-top: 0.5rem; margin-bottom: 0; letter-spacing: 0.05em;">STAGE 7</h2>
+                        
+                        <div id="instructions" style="color: white; text-align: left; padding: 0 1rem; margin-top: 0.5rem; font-family: sans-serif; letter-spacing: 0.02em; font-size: 0.85rem; line-height: 1.1; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                            <h3 style="font-family: 'Bangers', cursive; font-size: 1.6rem; color: #fde047; text-align: center; margin-bottom: 0.2rem; letter-spacing: 0.025em;">How to Play</h3>
+                            <ul style="list-style: none; padding-left: 0;">
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎯</span> <span>Pop <strong>70 Bubbles</strong> to win!</span> </li>
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">💖</span> <span>Hearts are frequent (Max 3).</span> </li>
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">👻</span> <span>Invisibility hides you from <strong>all animals!</strong></span> </li>
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">⭐</span> <span>Star protects from <strong>all animals!</strong></span> </li>
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎈</span> <span><strong>NEVER</strong> touch <strong>Spikey Balloons!</strong> (No protection!)</span> </li>
+                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 2px 4px;">
+                                    <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🚀</span>
+                                    <span>At 50 points: <strong>OCTOPI APPEAR!</strong></span>
+                                </li>
+                            </ul>
+                        </div>
+    
+                        <button id="startButton">Start Level 7</button>
+                        <div class="back-button" onclick="window.location.href='index.html'">Back to Menu</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- FREEMIUM PROTOCOL: Security Gate ---
+    try {
+        if (window.localStorage && localStorage.getItem('puffer_pro_unlocked') !== 'true') {
+            window.location.href = 'pp3.html';
+            return; 
+        }
+    } catch(error) {
+        // Operational bypass for sandboxed environments
+    }
+
+    // --- Core Game Setup ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let canvasWidth, canvasHeight;
+
+    // --- Game State ---
+    let gameRunning = false;
+    let score = 0;
+    let isMuted = false;
+    const CURRENT_LEVEL = 7;
+    const LEVEL_COMPLETE_SCORE = 70; 
+    let lives = 3;
+    const MAX_LIVES = 3; 
+    let rocketEventActive = false; 
+    let octopusIntro = false; 
+
+    // --- Level 7 Settings ---
+    const LEVEL_SETTINGS = {
+        bubbleSpeed: 1.2, 
+        redBalloonSpeed: 1.4,
+        powerUpSpeed: 1.2,
+        bubbleSpawnRate: 90,
+        redBalloonSpawnRate: 120,
+        powerUpSpawnRate: 250,
+        dolphinSpawnRate: 170,
+        heartBalloonSpawnRate: 900, 
+        turtleSpawnRate: 200,
+        jellyfishSpawnRate: 180, 
+        sharkSpawnRate: 0, 
+        crabSpawnRate: 0,
+        octopusSpawnRate: 0,
+        whaleSpawnRate: 0
+    };
+
+    // --- Player State ---
+    let player = {
+        x: 0, y: 0, targetX: 0, radius: 20, isPuffed: false,
+        puffTimer: 0, puffDuration: 7000,
+        hasMuffler: false, 
+        mufflerTimer: 0, mufflerDuration: 10000,
+        targetY: 0, baseY: 0, lerpFactor: 0.2, 
+        isInvincible: false, invincibleTimer: 0,
+        invincibleDuration: 3000, 
+        isInvisible: false, invisibleTimer: 0, invisibleDuration: 5000
+    };
+
+    // --- Game Objects ---
+    let bubbles = [];
+    let redBalloons = [];
+    let powerUps = []; 
+    let dolphins = [];
+    let particles = [];
+    let heartBalloons = [];
+    let turtles = []; 
+    let jellyfish = []; 
+    let sharks = []; 
+    let octopi = [];
+    let frame = 0;
+
+    // --- DOM Elements ---
+    let startModal = document.getElementById('startModal');
+    let startButton = document.getElementById('startButton');
+    let scoreDisplay = document.getElementById('scoreDisplay');
+    let muteButton = document.getElementById('muteButton');
+    let puffTimer = document.getElementById('puffTimer');
+    let puffTimerBar = document.getElementById('puffTimerBar');
+    let logoPuffer = document.getElementById('logoPuffer');
+    let livesDisplay = document.getElementById('livesDisplay');
+    let invisibilityTimer = document.getElementById('invisibilityTimer');
+    let invisibilityTimerBar = document.getElementById('invisibilityTimerBar');
+    let mufflerTimer = document.getElementById('mufflerTimer'); 
+    let mufflerTimerBar = document.getElementById('mufflerTimerBar'); 
+    let particleCanvas = document.getElementById('particleCanvas');
+    let pCtx = particleCanvas.getContext('2d');
+    let levelCompleteModal = document.getElementById('levelCompleteModal');
+    let nextLevelButton = document.getElementById('nextLevelButton');
+    let rocketModal = document.getElementById('rocketModal');
+    let rocketSVGContainer = document.getElementById('rocketSVGContainer');
+    let rocketModalText = document.getElementById('rocketModalText');
+
+    // --- Audio Setup (Pure AudioContext Buffer - Vanguard Proven) ---
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let bgmBuffer = null;
+    let bgmSource = null;
+    let bgmGain = null;
+    let isAudioUnlocked = false;
+
+    function loadAudioData() {
+        const cacheBuster = Date.now();
+        const request = new XMLHttpRequest();
+        request.open('GET', `pp_music/${CURRENT_LEVEL}.mp3?nocache=${cacheBuster}`, true);
+        request.responseType = 'arraybuffer';
+        request.onload = function() {
+            audioCtx.decodeAudioData(request.response, function(buffer) {
+                bgmBuffer = buffer;
+                if (gameRunning && !bgmSource) {
+                    startBGM();
+                }
+            }, function(e) {
+                console.error("Audio Decode Error. MP3 format unsupported by device.", e);
+            });
+        };
+        request.send();
+    }
+    loadAudioData();
+
+    function unlockAudio() {
+        if (isAudioUnlocked) return;
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+        isAudioUnlocked = true;
+    }
+
+    const initialUnlock = () => {
+        unlockAudio();
+        document.removeEventListener('pointerdown', initialUnlock);
+        document.removeEventListener('touchstart', initialUnlock);
+        document.removeEventListener('click', initialUnlock);
+    };
+    document.addEventListener('pointerdown', initialUnlock, { passive: true });
+    document.addEventListener('touchstart', initialUnlock, { passive: true });
+    document.addEventListener('click', initialUnlock, { passive: true });
+
+    function startBGM() {
+        if (!audioCtx || !bgmBuffer) return;
+        if (bgmSource) {
+            try { bgmSource.stop(); bgmSource.disconnect(); } catch(e){}
+        }
+        bgmSource = audioCtx.createBufferSource();
+        bgmSource.buffer = bgmBuffer;
+        bgmSource.loop = true;
+        bgmGain = audioCtx.createGain();
+        bgmGain.gain.value = isMuted ? 0 : 0.4;
+        bgmSource.connect(bgmGain);
+        bgmGain.connect(audioCtx.destination);
+        bgmSource.start(0);
+    }
+
+    function stopBGM() {
+        if (bgmSource) {
+            try { bgmSource.stop(); bgmSource.disconnect(); } catch(e){}
+            bgmSource = null;
+        }
+    }
+
+    function createSound(type, freq, duration) {
+        if (!audioCtx || isMuted) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        try {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            if (type === 'sawtooth') { gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); oscillator.frequency.exponentialRampToValueAtTime(freq / 4, audioCtx.currentTime + duration); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); }
+            else if (type === 'triangle') { gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime); oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration * 0.5); oscillator.frequency.exponentialRampToValueAtTime(freq, audioCtx.currentTime + duration); }
+            else { gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); }
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+
+            setTimeout(() => {
+                try {
+                    oscillator.disconnect();
+                    gainNode.disconnect();
+                } catch(e) {}
+            }, (duration * 1000) + 100);
+        } catch(e) {
+            console.log("SFX engine skipped");
+        }
+    }
+
+    const playPopSound = () => createSound('sine', 440, 0.1);
+    const playMineSound = () => createSound('sawtooth', 220, 0.5);
+    const playPowerUpSound = () => createSound('triangle', 660, 0.2);
+    const playInvisibilitySound = () => { createSound('sine', 880, 0.05); setTimeout(() => createSound('sine', 1046, 0.1), 50); };
+    const playHeartSound = () => { createSound('sine', 587, 0.1); setTimeout(() => createSound('sine', 880, 0.15), 100); };
+    const playLevelWinSound = () => { createSound('sine', 523, 0.1); setTimeout(() => createSound('sine', 659, 0.1), 100); setTimeout(() => createSound('sine', 784, 0.1), 200); setTimeout(() => createSound('sine', 1046, 0.2), 300); };
+    
+    const playRocketSound = () => {
+        if (!audioCtx || isMuted) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sawtooth';
+        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.5);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 3);
+        osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 3);
+    };
+    
+    // --- Player SVGs ---
+    const playerSVG = (isPuffed, hasMuffler) => {
+        const bodyRadius = isPuffed ? 11 : 8;
+        const bodyColor = "#facc15"; const bodyStroke = "#082f49";
+        const eyeRadius = isPuffed ? 5 : 3;
+        const pupilRadius = isPuffed ? 2.5 : 1.5;
+        let spikes = '';
+        const spikeLength = isPuffed ? 6 : 1;
+        const spikeWidth = isPuffed ? 2.5 : 1.5;
+        for (let i = 0; i < 8; i++) { const angle = (i / 8) * 2 * Math.PI; const x1 = 12 + Math.cos(angle) * (bodyRadius - 1); const y1 = 13 + Math.sin(angle) * (bodyRadius - 1); const x2 = 12 + Math.cos(angle) * (bodyRadius + spikeLength); const y2 = 13 + Math.sin(angle) * (bodyRadius + spikeLength); spikes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f97316" stroke-width="${spikeWidth}" stroke-linecap="round"/>`; }
+        const mufflerStar = hasMuffler ? `<path d="M 4 10 L 6 6 L 2 4 L 7 4 L 8 0 L 9 4 L 14 4 L 10 6 L 12 10 L 8 7 Z" fill="#ec4899" stroke="#9d174d" transform="translate(4, 15) scale(0.6)"/>` : '';
+        return ` <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 24 24" fill="none" stroke-width="1.5"> <defs> <radialGradient id="pufferGradientGame" cx="50%" cy="50%" r="50%" fx="70%" fy="70%"> <stop offset="0%" style="stop-color:#fef08a; stop-opacity:1" /> <stop offset="100%" style="stop-color:${bodyColor}; stop-opacity:1" /> </radialGradient> </defs> <g> ${spikes} ${mufflerStar} <circle cx="12" cy="13" r="${bodyRadius}" fill="url(#pufferGradientGame)" stroke="${bodyStroke}" stroke-linejoin="round"/> <ellipse cx="6" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(-20 6 13)"/> <ellipse cx="18" cy="13" rx="1.5" ry="2.5" fill="${bodyColor}" stroke="${bodyStroke}" transform="rotate(20 18 13)"/> <path d="M10.5 15C10.5 15 11 15.5 12 15.5C13 15.5 13.5 15 13.5 15" stroke="${bodyStroke}" stroke-linecap="round"/> <circle cx="14.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="14.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" /> <circle cx="9.5" cy="12" r="${eyeRadius}" fill="white" stroke="${bodyStroke}" stroke-width="0.5" /><circle cx="9.5" cy="12" r="${pupilRadius}" fill="${bodyStroke}" /> </g> </svg>`;
+    }
+    const playerImageNormal = new Image(); playerImageNormal.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, false))}`;
+    const playerImagePuffed = new Image(); playerImagePuffed.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, false))}`;
+    const playerImageMuffler = new Image(); playerImageMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(false, true))}`;
+    const playerImagePuffedMuffler = new Image(); playerImagePuffedMuffler.src = `data:image/svg+xml;base64,${btoa(playerSVG(true, true))}`;
+    if (logoPuffer) {
+        logoPuffer.src = playerImageNormal.src;
+    }
+
+    // --- Item SVGs ---
+    const bubbleSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="bubbleGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:rgba(255,255,255,0.7); stop-opacity:1" /> <stop offset="100%" style="stop-color:rgba(255,255,255,0); stop-opacity:1" /> </radialGradient> </defs> <circle cx="20" cy="20" r="18" fill="rgba(200, 230, 255, 0.4)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/> <circle cx="20" cy="20" r="18" fill="url(#bubbleGrad)"/> <path d="M 12 12 C 15 14, 20 18, 22 22 C 21 16, 16 12, 12 12 Z" fill="rgba(255, 255, 255, 0.7)" /> </svg>`;
+    const bubbleImage = new Image(); bubbleImage.src = `data:image/svg+xml;base64,${btoa(bubbleSVG())}`;
+    const redBalloonSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="redBalloonGrad" cx="50%" cy="40%" r="40%"> <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/> <stop offset="100%" stop-color="rgba(255,255,255,0)"/> </radialGradient> </defs> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" transform="translate(0 -3)"/> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="url(#redBalloonGrad)" transform="translate(0 -3)"/> <g stroke="#b91c1c" stroke-width="2" stroke-linecap="round"> <line x1="20" y1="0" x2="20" y2="4" /> <line x1="6" y1="6" x2="9" y2="9" /> <line x1="34" y1="6" x2="31" y2="9" /> <line x1="0" y1="20" x2="4" y2="20" /> <line x1="40" y1="20" x2="36" y2="20" /> </g> </svg>`;
+    const redBalloonImage = new Image(); redBalloonImage.src = `data:image/svg+xml;base64,${btoa(redBalloonSVG())}`;
+    const flowerSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(20 20)"> <circle cx="0" cy="0" r="6" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 -8 C 5 -12, 5 -12, 0 -16 C -5 -12, -5 -12, 0 -8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M0 8 C 5 12, 5 12, 0 16 C -5 12, -5 12, 0 8" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M-8 0 C -12 5, -12 5, -16 0 C -12 -5, -12 -5, -8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> <path d="M8 0 C 12 5, 12 5, 16 0 C 12 -5, 12 -5, 8 0" fill="#f472b6" stroke="#db2777" stroke-width="1.5"/> </g> </svg>`;
+    const flowerImage = new Image(); flowerImage.src = `data:image/svg+xml;base64,${btoa(flowerSVG())}`;
+    const starSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <path d="M 20 2 L 25 14 L 38 14 L 28 22 L 32 36 L 20 28 L 8 36 L 12 22 L 2 14 L 15 14 Z" fill="#ec4899" stroke="#9d174d" stroke-width="2" stroke-linejoin="round"/> </svg>`;
+    const starImage = new Image(); starImage.src = `data:image/svg+xml;base64,${btoa(starSVG())}`;
+    const yellowFlowerSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(20 20)"> <circle cx="0" cy="0" r="6" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 -8 C 5 -12, 5 -12, 0 -16 C -5 -12, -5 -12, 0 -8" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M0 8 C 5 12, 5 12, 0 16 C -5 12, -5 12, 0 8" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M-8 0 C -12 5, -12 5, -16 0 C -12 -5, -12 -5, -8 0" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> <path d="M8 0 C 12 5, 12 5, 16 0 C 12 -5, 12 -5, 8 0" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/> </g> </svg>`;
+    const yellowFlowerImage = new Image(); yellowFlowerImage.src = `data:image/svg+xml;base64,${btoa(yellowFlowerSVG())}`;
+    const dolphinSVG = () => ` <svg width="100" height="60" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="dolphinGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#a5f3fc; stop-opacity:1" /> <stop offset="100%" style="stop-color:#06b6d4; stop-opacity:1" /> </radialGradient> </defs> <g transform="translate(0, 5)"> <path d="M 0 25 C 10 20, 10 30, 0 25" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/> <path d="M 5 20 C 15 15, 15 25, 5 20" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round"/> <path d="M 10 22 C 30 5, 70 5, 90 20 C 95 25, 100 25, 95 30 C 80 45, 30 45, 10 28 Z" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="3" stroke-linejoin="round" /> <path d="M 40 28 C 35 35, 45 40, 50 38" fill="url(#dolphinGradient)" stroke="#083344" stroke-width="2.5" stroke-linejoin="round"/> <circle cx="85" cy="24" r="4" fill="white" stroke="#083344" stroke-width="1"/> <circle cx="86" cy="24" r="2" fill="#083344" /> </g> </svg>`;
+    const dolphinImage = new Image(); dolphinImage.src = `data:image/svg+xml;base64,${btoa(dolphinSVG())}`;
+    const heartBalloonSVG = () => ` <svg width="40" height="48" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="heartGrad" cx="50%" cy="40%" r="40%"> <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/> <stop offset="100%" stop-color="rgba(255,255,255,0)"/> </radialGradient> </defs> <path d="M20,10 C10,-5 0,5 0,17 C0,27 10,35 20,40 C30,35 40,27 40,17 C40,5 30,-5 20,10 Z" fill="#f472b6" stroke="#db2777" stroke-width="2"/> <path d="M20,10 C10,-5 0,5 0,17 C0,27 10,35 20,40 C30,35 40,27 40,17 C40,5 30,-5 20,10 Z" fill="url(#heartGrad)"/> <path d="M18 39 C16 42, 16 46, 20 48 C 24 46, 24 42, 22 39" fill="#f472b6" stroke="#db2777" stroke-width="1.5" transform="translate(0 -2)"/> </svg>`;
+    const heartBalloonImage = new Image(); heartBalloonImage.src = `data:image/svg+xml;base64,${btoa(heartBalloonSVG())}`;
+    const turtleSVG = () => `<svg width="80" height="60" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 5)"> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30 Z" fill="#166534" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30" stroke="#fde047" stroke-width="1" fill="none" opacity="0.5"/> <path d="M 40 5 C 30 15, 30 25, 40 30 C 50 25, 50 15, 40 5" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 25 12 C 18 18, 18 25, 25 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 55 12 C 62 18, 62 25, 55 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <circle cx="70" cy="20" r="8" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <circle cx="73" cy="18" r="1.5" fill="black"/> <path d="M 15 25 C 0 20, 0 35, 15 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 60 25 C 75 20, 75 35, 60 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 20 30 C 10 45, 20 45, 25 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 55 30 C 65 45, 55 45, 50 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> </g> </svg>`;
+    const turtleImage = new Image(); turtleImage.src = `data:image/svg+xml;base64,${btoa(turtleSVG())}`;
+    const jellyfishSVG = () => ` <svg width="60" height="80" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="jellyGrad" cx="50%" cy="50%" r="50%" fx="70%" fy="30%"> <stop offset="0%" style="stop-color:#f0abfc; stop-opacity:1" /> <stop offset="100%" style="stop-color:#a855f7; stop-opacity:1" /> </radialGradient> </defs> <g opacity="0.8"> <path d="M 10 30 C 10 10, 50 10, 50 30 C 50 50, 40 50, 30 50 C 20 50, 10 50, 10 30 Z" fill="url(#jellyGrad)" stroke="#7e22ce" stroke-width="3"/> <line x1="15" y1="50" x2="10" y2="70" stroke="#f0abfc" stroke-width="2.5" stroke-linecap="round"/> <line x1="22" y1="50" x2="20" y2="75" stroke="#f0abfc" stroke-width="2.5" stroke-linecap="round"/> <line x1="30" y1="50" x2="30" y2="70" stroke="#f0abfc" stroke-width="2.5" stroke-linecap="round"/> <line x1="38" y1="50" x2="40" y2="75" stroke="#f0abfc" stroke-width="2.5" stroke-linecap="round"/> <line x1="45" y1="50" x2="50" y2="70" stroke="#f0abfc" stroke-width="2.5" stroke-linecap="round"/> </g> </svg>`;
+    const jellyfishImage = new Image(); jellyfishImage.src = `data:image/svg+xml;base64,${btoa(jellyfishSVG())}`;
+
+    const octopusSVG = () => `
+        <svg width="70" height="90" viewBox="0 0 70 90" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="octopusGrad" cx="50%" cy="50%" r="50%" fx="70%" fy="30%">
+                    <stop offset="0%" style="stop-color:#f87171; stop-opacity:1" /> <stop offset="100%" style="stop-color:#b91c1c; stop-opacity:1" /> </radialGradient>
+            </defs>
+            <g opacity="0.9">
+                <path d="M 10 35 C 10 10, 60 10, 60 35 C 60 60, 50 60, 35 60 C 20 60, 10 60, 10 35 Z" fill="url(#octopusGrad)" stroke="#7f1d1d" stroke-width="3"/>
+                <circle cx="25" cy="30" r="5" fill="white" stroke="#7f1d1d" stroke-width="1.5"/><circle cx="26" cy="30" r="2.5" fill="#1f2937"/>
+                <circle cx="45" cy="30" r="5" fill="white" stroke="#7f1d1d" stroke-width="1.5"/><circle cx="46" cy="30" r="2.5" fill="#1f2937"/>
+                <path d="M 15 55 C 5 70, 5 85, 15 85" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 25 58 C 20 75, 20 90, 25 90" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 35 58 C 35 75, 35 90, 35 90" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 45 58 C 50 75, 50 90, 45 90" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+                <path d="M 55 55 C 65 70, 65 85, 55 85" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+            </g>
+        </svg>`;
+    const octopusImage = new Image(); octopusImage.src = `data:image/svg+xml;base64,${btoa(octopusSVG())}`;
+    
+    const rocketSVG = () => ` <svg width="150" height="150" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(25 0) rotate(45 50 50)"> <path d="M 50 0 L 65 25 L 65 60 C 65 65 60 70 55 70 L 45 70 C 40 70 35 65 35 60 L 35 25 Z" fill="#e5e7eb" stroke="#6b7280" stroke-width="3"/> <path d="M 50 0 L 40 25 L 60 25 Z" fill="#ef4444" stroke="#991b1b" stroke-width="3"/> <rect x="42" y="30" width="16" height="16" rx="3" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2.5"/> <path d="M 35 65 L 20 80 L 25 70 Z" fill="#d1d5db" stroke="#4b5563" stroke-width="3"/> <path d="M 65 65 L 80 80 L 75 70 Z" fill="#d1d5db" stroke="#4b5563" stroke-width="3"/> <path d="M 42 70 L 30 85 L 38 75 Z" fill="#d1d5db" stroke="#4b5563" stroke-width="3"/> <path d="M 58 70 L 70 85 L 62 75 Z" fill="#d1d5db" stroke="#4b5563" stroke-width="3"/> <g transform="translate(42 70)"> <path d="M 0 5 C 5 20, -5 20, 0 30" fill="#f59e0b" stroke="#d97706" stroke-width="2" stroke-linecap="round"/> <path d="M 8 5 C 13 20, 3 20, 8 30" fill="#f59e0b" stroke="#d97706" stroke-width="2" stroke-linecap="round"/> <path d="M 16 5 C 21 20, 11 20, 16 30" fill="#f59e0b" stroke="#d97706" stroke-width="2" stroke-linecap="round"/> </g> </g> </svg>`;
+
+    // --- Pop Particle Class ---
+    class PopParticle { constructor(x, y, color) { this.x = x; this.y = y; this.size = Math.random() * 10 + 5; this.speedX = Math.random() * 6 - 3; this.speedY = Math.random() * -3 - 1; this.color = color; this.life = 100; this.gravity = 0.1; this.opacity = 1; } update() { this.x += this.speedX; this.y += this.speedY; this.speedY += this.gravity; this.life -= 2; this.opacity = this.life / 100; } draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; } }
+    function createPopEffect(x, y, color) { playPopSound(); let particleColor = 'rgba(200, 230, 255, 0.7)'; for (let i = 0; i < 15; i++) { particles.push(new PopParticle(x, y, particleColor)); } }
+
+    // --- Game Mechanics ---
+    function resizeCanvas() { canvasWidth = window.innerWidth; canvasHeight = window.innerHeight; canvas.width = canvasWidth; canvas.height = canvasHeight; player.baseY = canvasHeight / 1.5; if (!player.hasMuffler) { player.targetY = player.baseY; player.y = player.baseY; } }
+    function updateScore(points) { score += points; scoreDisplay.textContent = score; }
+    function updateLivesDisplay() { livesDisplay.textContent = '❤️'.repeat(lives); }
+    
+    function resetGame() {
+        score = 0; lives = 3; frame = 0;
+        bubbles = []; redBalloons = []; powerUps = []; dolphins = []; particles = []; heartBalloons = []; turtles = []; jellyfish = []; octopi = [];
+        octopusIntro = false; rocketEventActive = false; LEVEL_SETTINGS.octopusSpawnRate = 0;
+        player.isPuffed = false; player.hasMuffler = false; player.puffTimer = 0; player.mufflerTimer = 0;
+        if(player.baseY) { player.targetY = player.baseY; player.y = player.baseY; } else { resizeCanvas(); player.x = canvasWidth / 2; player.targetX = canvasWidth / 2; player.targetY = player.baseY; player.y = player.baseY; }
+        player.isInvincible = false; player.invincibleTimer = 0; player.isInvisible = false; player.invisibleTimer = 0;
+        updateScore(0); updateLivesDisplay();
+        puffTimer.style.display = 'none'; invisibilityTimer.style.display = 'none'; mufflerTimer.style.display = 'none';
+        levelCompleteModal.style.display = 'none'; rocketModal.style.display = 'none';
+    }
+    
+    function startGame() { 
+        resetGame(); 
+        gameRunning = true; 
+        startModal.style.display = 'none'; 
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); } 
+        if (bgmBuffer) { startBGM(); } 
+        gameLoop(); 
+    }
+    
+    function gameOver() { 
+        gameRunning = false; 
+        stopBGM();
+
+        const mainTitle = document.getElementById('mainTitle');
+        if(mainTitle) {
+            mainTitle.innerHTML = 'GAME<br>OVER';
+            mainTitle.style.color = '#ef4444';
+            mainTitle.style.textShadow = '4px 4px 0px #7f1d1d, 0 0 20px #ef4444';
+            mainTitle.style.fontSize = '4.5rem';
+        }
+        
+        const poofLine = document.getElementById('poof-line');
+        if(poofLine) poofLine.style.display = 'none';
+
+        const instructions = document.getElementById('instructions');
+        if(instructions) instructions.style.display = 'none';
+
+        const btn = document.getElementById('startButton');
+        if(btn) {
+            btn.textContent = "Back to Level 6";
+        }
+        
+        startModal.style.display = 'flex'; 
+    }
+    
+    function playerHit() { if (player.isInvincible) return; lives--; updateLivesDisplay(); playMineSound(); if (lives <= 0) { gameOver(); } else { player.isInvincible = true; player.invincibleTimer = player.invincibleDuration; } }
+    function levelComplete() { gameRunning = false; playLevelWinSound(); stopBGM(); levelCompleteModal.style.display = 'flex'; }
+
+    // --- Spawning Logic ---
+    function spawnObjects() {
+        if (frame % LEVEL_SETTINGS.bubbleSpawnRate === 0) { const size = Math.random() * 15 + 15; bubbles.push({ x: Math.random() * canvasWidth, y: canvasHeight + 50, radius: size, img: bubbleImage, color: 'rgba(200, 230, 255, 0.7)', speed: LEVEL_SETTINGS.bubbleSpeed + Math.random() * 0.5, wobble: Math.random() * 2 - 1, wobbleSpeed: Math.random() * 0.05 + 0.02 }); }
+        if (frame % LEVEL_SETTINGS.redBalloonSpawnRate === 0) { redBalloons.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: redBalloonImage, speed: LEVEL_SETTINGS.redBalloonSpeed + Math.random() * 0.5 }); }
+        if (frame % LEVEL_SETTINGS.powerUpSpawnRate === 0) { const typeRoll = Math.random(); let type, img; if (typeRoll < 0.33) { type = 0; img = flowerImage; } else if (typeRoll < 0.66) { type = 1; img = starImage; } else { type = 2; img = yellowFlowerImage; } powerUps.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: img, type: type, speed: LEVEL_SETTINGS.powerUpSpeed + Math.random() * 0.5 }); }
+        const dangerZoneMaxY = canvasHeight * 0.60;
+        if (frame % LEVEL_SETTINGS.turtleSpawnRate === 0) { let spawnY; if (Math.random() > 0.5) { spawnY = Math.random() * dangerZoneMaxY; } else { spawnY = (Math.random() * (canvasHeight * 0.20)) + (canvasHeight * 0.80); } turtles.push({ x: -100, y: spawnY, radius: 30, img: turtleImage, speed: ((LEVEL_SETTINGS.redBalloonSpeed * 0.8) + Math.random() * 0.5) }); }
+        if (frame % LEVEL_SETTINGS.dolphinSpawnRate === 0) { dolphins.push({ x: -100, y: Math.random() * dangerZoneMaxY, radius: 35, img: dolphinImage, speed: (Math.random() * 2 + 2) }); }
+        if (frame % LEVEL_SETTINGS.jellyfishSpawnRate === 0) { jellyfish.push({ x: Math.random() * canvasWidth, y: -80, radius: 30, img: jellyfishImage, speed: (LEVEL_SETTINGS.bubbleSpeed * 0.7) }); }
+        
+        if (LEVEL_SETTINGS.octopusSpawnRate > 0 && frame % LEVEL_SETTINGS.octopusSpawnRate === 0) {
+            octopi.push({ x: Math.random() * canvasWidth, y: -90, radius: 35, img: octopusImage, speed: (LEVEL_SETTINGS.bubbleSpeed * 0.9) });
+        }
+        if (frame % LEVEL_SETTINGS.heartBalloonSpawnRate === 0) { heartBalloons.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: heartBalloonImage, speed: LEVEL_SETTINGS.powerUpSpeed }); }
+    }
+
+    // --- updatePlayer ---
+    function updatePlayer() {
+        if (isNaN(player.x) || !isFinite(player.x)) player.x = canvasWidth / 2;
+        if (isNaN(player.y) || !isFinite(player.y)) player.y = player.baseY;
+        if (isNaN(player.targetX) || !isFinite(player.targetX)) player.targetX = canvasWidth / 2;
+        if (isNaN(player.targetY) || !isFinite(player.targetY)) player.targetY = player.baseY;
+
+        player.x += (player.targetX - player.x) * player.lerpFactor;
+        player.y += (player.targetY - player.y) * player.lerpFactor;
+
+        if (player.isPuffed) { player.puffTimer -= 1000 / 60; const timerPercent = (player.puffTimer / player.puffDuration) * 100; puffTimerBar.style.width = `${timerPercent}%`; if (player.puffTimer <= 0) { player.isPuffed = false; puffTimer.style.display = 'none'; } }
+        if (player.hasMuffler) { player.mufflerTimer -= 1000 / 60; mufflerTimerBar.style.width = `${(player.mufflerTimer / player.mufflerDuration) * 100}%`; if (player.mufflerTimer <= 0) { player.hasMuffler = false; mufflerTimer.style.display = 'none'; } }
+        if (player.isInvincible) { player.invincibleTimer -= 1000 / 60; if (player.invincibleTimer <= 0) { player.isInvincible = false; } }
+        if (player.isInvisible) { player.invisibleTimer -= 1000 / 60; const timerPercent = (player.invisibleTimer / player.invisibleDuration) * 100; invisibilityTimerBar.style.width = `${timerPercent}%`; if (player.invisibleTimer <= 0) { player.isInvisible = false; invisibilityTimer.style.display = 'none'; } }
+    }
+
+    // --- updateObjects (Collision Logic) ---
+    function updateObjects() {
+        const playerHitbox = { x: player.x, y: player.y, radius: player.radius };
+        for (let i = bubbles.length - 1; i >= 0; i--) { bubbles[i].y -= bubbles[i].speed; bubbles[i].x += Math.sin(frame * bubbles[i].wobbleSpeed) * bubbles[i].wobble; if (bubbles[i].y < -50) { bubbles.splice(i, 1); continue; } if (checkCollision(playerHitbox, bubbles[i])) { if (player.isPuffed || player.hasMuffler || player.isInvisible) { createPopEffect(bubbles[i].x, bubbles[i].y, bubbles[i].color); updateScore(1); bubbles.splice(i, 1); } } }
+        for (let i = redBalloons.length - 1; i >= 0; i--) { redBalloons[i].y -= redBalloons[i].speed; if (redBalloons[i].y < -40) { redBalloons.splice(i, 1); continue; } if (!player.isInvincible && checkCollision(playerHitbox, redBalloons[i])) { playerHit(); redBalloons.splice(i, 1); if (!gameRunning) return; continue; } }
+        for (let i = dolphins.length - 1; i >= 0; i--) { dolphins[i].x += dolphins[i].speed; if (dolphins[i].x > canvasWidth + 100) { dolphins.splice(i, 1); continue; } if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, dolphins[i])) { playerHit(); if (!gameRunning) return; } }
+        for (let i = turtles.length - 1; i >= 0; i--) { turtles[i].x += turtles[i].speed; if (turtles[i].x > canvasWidth + 100) { turtles.splice(i, 1); continue; } if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, turtles[i])) { playerHit(); turtles.splice(i, 1); if (!gameRunning) return; } }
+        for (let i = jellyfish.length - 1; i >= 0; i--) { jellyfish[i].y += jellyfish[i].speed; if (jellyfish[i].y > canvasHeight + 80) { jellyfish.splice(i, 1); continue; } if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, jellyfish[i])) { playerHit(); jellyfish.splice(i, 1); if (!gameRunning) return; } }
+        
+        for (let i = octopi.length - 1; i >= 0; i--) {
+            octopi[i].y += octopi[i].speed; 
+            if (octopi[i].y > canvasHeight + 90) { octopi.splice(i, 1); continue; }
+            if (!player.isInvincible && !player.isInvisible && !player.hasMuffler && checkCollision(playerHitbox, octopi[i])) {
+                playerHit(); octopi.splice(i, 1); if (!gameRunning) return;
+            }
+        }
+
+        for (let i = powerUps.length - 1; i >= 0; i--) { powerUps[i].y -= powerUps[i].speed; if (powerUps[i].y < -40) { powerUps.splice(i, 1); continue; } if (checkCollision(playerHitbox, powerUps[i])) { if (powerUps[i].type === 0) { playPowerUpSound(); player.isPuffed = true; player.puffTimer = player.puffDuration; puffTimer.style.display = 'block'; } else if (powerUps[i].type === 1) { playPowerUpSound(); player.hasMuffler = true; player.mufflerTimer = player.mufflerDuration; mufflerTimer.style.display = 'block'; } else { playInvisibilitySound(); player.isInvisible = true; player.invisibleTimer = player.invisibleDuration; invisibilityTimer.style.display = 'block'; } powerUps.splice(i, 1); } }
+        for (let i = heartBalloons.length - 1; i >= 0; i--) { heartBalloons[i].y -= heartBalloons[i].speed; if (heartBalloons[i].y < -40) { heartBalloons.splice(i, 1); continue; } if (checkCollision(playerHitbox, heartBalloons[i])) { if(lives < MAX_LIVES) { playHeartSound(); lives++; updateLivesDisplay(); } else { playPopSound(); } heartBalloons.splice(i, 1); } }
+        for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) { particles.splice(i, 1); } }
+
+        if (score >= 50 && !octopusIntro) {
+            octopusIntro = true;
+            LEVEL_SETTINGS.octopusSpawnRate = 160; 
+            gameRunning = false;
+            rocketEventActive = true;
+            rocketModalText.textContent = "NEW THREAT DETECTED! OCTOPI!"; 
+            rocketSVGContainer.innerHTML = rocketSVG();
+            rocketSVGContainer.classList.add('shaking');
+            rocketModal.style.display = 'flex';
+            playRocketSound();
+            setTimeout(() => { rocketModalText.textContent = "GET READY!"; rocketSVGContainer.classList.remove('shaking'); }, 2800);
+            setTimeout(() => { rocketModal.style.display = 'none'; gameRunning = true; rocketEventActive = false; player.isInvincible = true; player.invincibleTimer = player.invincibleDuration; requestAnimationFrame(gameLoop); }, 4000); 
+        }
+    }
+    function checkCollision(obj1, obj2) { const dx = obj1.x - obj2.x; const dy = obj1.y - obj2.y; const distance = Math.sqrt(dx * dx + dy * dy); return distance < obj1.radius + obj2.radius; }
+
+    // --- Draw Function ---
+    function draw() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        bubbles.forEach(b => ctx.drawImage(b.img, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2));
+        redBalloons.forEach(m => ctx.drawImage(m.img, m.x - m.radius, m.y - m.radius, m.radius * 2, m.radius * 2.4));
+        powerUps.forEach(p => ctx.drawImage(p.img, p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2));
+        dolphins.forEach(d => ctx.drawImage(d.img, d.x - d.radius, d.y - d.radius, d.radius * 2.8, d.radius * 1.8));
+        turtles.forEach(t => ctx.drawImage(t.img, t.x - t.radius, t.y - t.radius, t.radius * 2.6, t.radius * 2));
+        heartBalloons.forEach(h => ctx.drawImage(h.img, h.x - h.radius, h.y - h.radius, h.radius * 2, h.radius * 2.4));
+        jellyfish.forEach(j => ctx.drawImage(j.img, j.x - (j.radius*0.75), j.y - j.radius, j.radius * 1.5, j.radius * 2.6));
+        octopi.forEach(o => ctx.drawImage(o.img, o.x - (o.radius), o.y - o.radius, o.radius * 2, o.radius * 2.5));
+
+        let currentImage = playerImageNormal;
+        if (player.isPuffed && player.hasMuffler) currentImage = playerImagePuffedMuffler;
+        else if (player.isPuffed) currentImage = playerImagePuffed;
+        else if (player.hasMuffler) currentImage = playerImageMuffler;
+        ctx.save();
+        if (player.isInvincible) { if (frame % 10 < 5) { ctx.globalAlpha = 0.5; } }
+        else if (player.isInvisible) { ctx.globalAlpha = 0.35; }
+        else if (player.hasMuffler) { ctx.globalAlpha = (Math.sin(frame * 0.5) * 0.3) + 0.7; }
+        const drawSize = 80;
+        ctx.drawImage(currentImage, player.x - (drawSize/2), player.y - (drawSize/2), drawSize, drawSize);
+        ctx.restore();
+        particles.forEach(p => p.draw());
+    }
+    
+    function gameLoop() {
+        if (!gameRunning && !rocketEventActive) return;
+        if (!rocketEventActive) {
+            spawnObjects();
+            updatePlayer();
+            updateObjects();
+            draw();
+            if (score >= LEVEL_COMPLETE_SCORE) { levelComplete(); return; }
+        }
+        frame++;
+        requestAnimationFrame(gameLoop);
+    }
+
+    // --- Event Listeners and Universal Input Firewall ---
+    function setTargetPos(x, y) { 
+        if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y)) return;
+        const rect = canvas.getBoundingClientRect();
+        if (!rect || rect.width === 0 || rect.height === 0) return;
+        
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        const finalX = (x - rect.left) * scaleX;
+        const finalY = (y - rect.top) * scaleY;
+
+        if (isFinite(finalX)) player.targetX = finalX; 
+        if (isFinite(finalY)) player.targetY = finalY; 
+    } 
+
+    function handleInput(e) {
+        if (e.cancelable) e.preventDefault();
+        
+        if (e.type === 'pointerdown' && audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches.clientX;
+            clientY = e.touches.clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+            clientX = e.changedTouches.clientX;
+            clientY = e.changedTouches.clientY;
+        } else if (e.clientX !== undefined) {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        if (clientX !== undefined && clientY !== undefined) {
+            setTargetPos(clientX, clientY);
+        }
+    }
+
+    // --- init ---
+    function init() {
+        startModal = document.getElementById('startModal'); startButton = document.getElementById('startButton'); scoreDisplay = document.getElementById('scoreDisplay'); muteButton = document.getElementById('muteButton'); puffTimer = document.getElementById('puffTimer'); puffTimerBar = document.getElementById('puffTimerBar'); levelCompleteModal = document.getElementById('levelCompleteModal'); nextLevelButton = document.getElementById('nextLevelButton'); logoPuffer = document.getElementById('logoPuffer'); livesDisplay = document.getElementById('livesDisplay'); invisibilityTimer = document.getElementById('invisibilityTimer'); invisibilityTimerBar = document.getElementById('invisibilityTimerBar'); mufflerTimer = document.getElementById('mufflerTimer'); mufflerTimerBar = document.getElementById('mufflerTimerBar'); particleCanvas = document.getElementById('particleCanvas'); pCtx = particleCanvas.getContext('2d'); rocketModal = document.getElementById('rocketModal'); rocketSVGContainer = document.getElementById('rocketSVGContainer'); rocketModalText = document.getElementById('rocketModalText');
+        if(logoPuffer) { logoPuffer.src = playerImageNormal.src; }
+        resizeCanvas();
+        player.x = canvasWidth / 2; player.targetX = canvasWidth / 2;
+        updateLivesDisplay();
+        
+        canvas.addEventListener('pointerdown', handleInput, { passive: false });
+        canvas.addEventListener('pointermove', handleInput, { passive: false });
+        canvas.addEventListener('touchstart', handleInput, { passive: false });
+        canvas.addEventListener('touchmove', handleInput, { passive: false });
+        
+        // VANGUARD FIX: Direct, top-level synchronous play triggers
+        startButton.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            if (startButton.textContent === "Back to Level 6") {
+                window.location.href = 'pp6.html';
+            } else {
+                startGame(); 
+            }
+        });
+        
+        startButton.addEventListener('click', (e) => {
+            if (startButton.textContent === "Back to Level 6") {
+                window.location.href = 'pp6.html';
+            } else {
+                startGame();
+            }
+        });
+
+        muteButton.addEventListener('click', (e) => { 
+            e.preventDefault();
+            isMuted = !isMuted; 
+            muteButton.textContent = isMuted ? '🔇' : '🔊'; 
+            if (bgmGain && audioCtx) {
+                bgmGain.gain.setTargetAtTime(isMuted ? 0 : 0.4, audioCtx.currentTime, 0.1);
+            }
+        });
+        
+        window.addEventListener('resize', resizeCanvas);
+        startModal.style.display = 'flex';
+        setTimeout(() => { initParticles(); animateParticles(); }, 100);
+    }
+
+    // --- Logo Particle System ---
+    let logoParticles = []; let pCanvasWidth, pCanvasHeight;
+    function resizeParticleCanvas() { if (!particleCanvas) return; const modal = particleCanvas.parentElement; if (!modal) return; pCanvasWidth = modal.clientWidth; pCanvasHeight = modal.clientHeight; if(pCanvasWidth === 0 || pCanvasHeight === 0) { const tempModal = document.querySelector("#startModal .modal-inner"); if(tempModal) { pCanvasWidth = tempModal.clientWidth; pCanvasHeight = tempModal.clientHeight; } } particleCanvas.width = pCanvasWidth; particleCanvas.height = pCanvasHeight; }
+    class LogoParticle { constructor() { this.x = Math.random() * pCanvasWidth; this.y = pCanvasHeight + Math.random() * 50; this.radius = Math.random() * 3 + 1; this.speed = Math.random() * 1 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.y -= this.speed; if (this.y < -this.radius) { this.y = pCanvasHeight + this.radius; this.x = Math.random() * pCanvasWidth; } } draw() { if (!pCtx) return; pCtx.beginPath(); pCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; pCtx.fill(); } }
+    function initParticles() { resizeParticleCanvas(); logoParticles = []; for (let i = 0; i < 20; i++) { logoParticles.push(new LogoParticle()); } }
+    let particleAnimationId;
+    function animateParticles() { if (!pCtx) return; pCtx.clearRect(0, 0, pCanvasWidth, pCanvasHeight); logoParticles.forEach(p => { p.update(); p.draw(); }); particleAnimationId = requestAnimationFrame(animateParticles); }
+    
+    // --- Run Init ---
+    init();
+});
+</script>
+</body>
+</html>

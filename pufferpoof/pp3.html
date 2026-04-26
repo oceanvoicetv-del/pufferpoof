@@ -50,8 +50,8 @@
         .modal-text { font-size: 1.5rem; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); margin-bottom: 1.5rem; }
         .modal-button { font-family: 'Bangers', cursive; font-size: 2rem; letter-spacing: 0.05em; color: #134e4a; background: #a7f3d0; border: 3px solid #134e4a; border-radius: 1rem; padding: 0.5rem 1.5rem; box-shadow: 0 5px 0 #5eead4, 0 8px 10px rgba(0,0,0,0.3); transition: all 0.1s ease-out; cursor: pointer; text-decoration: none; display: inline-block; }
         
-        #muteButton { position: absolute; top: 15px; right: 15px; font-size: 1.8rem; background: rgba(0,0,0,0.2); border: 2px solid white; color: white; border-radius: 50%; width: 55px; height: 55px; z-index: 11; pointer-events: all; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        
+        #muteButton { position: absolute; top: 15px; right: max(85px, env(safe-area-inset-right) + 85px); font-size: 1.8rem; background: rgba(0,0,0,0.2); border: 2px solid white; color: white; border-radius: 50%; width: 55px; height: 55px; z-index: 11; pointer-events: all; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
         #timerContainer { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 80%; max-width: 300px; display: flex; flex-direction: column; gap: 8px; z-index: 9; }
         #puffTimer, #invisibilityTimer, #mufflerTimer { width: 100%; height: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; display: none; overflow: hidden; }
         #puffTimer { border: 2px solid white; }
@@ -61,112 +61,145 @@
         #puffTimerBar { background: linear-gradient(to right, #f472b6, #ec4899); }
         #invisibilityTimerBar { background: linear-gradient(to right, #fef08a, #fde047); }
         #mufflerTimerBar { background: linear-gradient(to right, #f9a8d4, #f472b6); }
+
+        #proWelcomeMessage { display: none; position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background-color: rgba(13, 148, 136, 0.95); border: 4px solid #fde047; border-radius: 1.5rem; padding: 1.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 999; width: 90%; max-width: 350px; pointer-events: none; animation: pulseGlow 2s ease-in-out infinite; }
     </style>
 </head>
 <body>
-    <div id="arcadeFrame">
-        <div id="gameWrapper">
-            <canvas id="gameCanvas"></canvas>
-            <div id="uiLayer">
-                <div id="livesDisplay"></div>
-                <div id="scoreDisplay">0</div>
-                <div id="timerContainer">
-                    <div id="invisibilityTimer"> <div id="invisibilityTimerBar"></div> </div>
-                    <div id="mufflerTimer"> <div id="mufflerTimerBar"></div> </div>
-                    <div id="puffTimer"> <div id="puffTimerBar"></div> </div>
-                </div>
-
-                <div id="paywallModal">
-                    <h2 class="modal-title">UNLOCK<br>PRO</h2>
-                    <p class="modal-text" style="font-size: 1.8rem; line-height: 1.2;">Level 3 Reached!</p>
-                    <p class="modal-text">Unlock all 9 levels and the Infinity Mode for a one-time purchase.</p>
-                    <button id="confirmPurchaseButton" class="modal-button" onclick="triggerPlayStoreBilling()">Unlock Game - &euro;2.99</button>
-                    <a href="index.html" class="back-button" style="display:block; margin-top: 20px;">Back to Menu</a>
-                </div>
-                
-                <div id="levelCompleteModal">
-                    <h2 class="modal-title">LEVEL 3<br>COMPLETE!</h2>
-                    <p class="modal-text">Amazing! The challenges get tougher from here.</p>
-                    <a href="pp4.html" class="modal-button" id="nextLevelButton">Go to Level 4</a>
-                </div>
+<div id="arcadeFrame">
+    <div id="gameWrapper">
+        <canvas id="gameCanvas"></canvas>
+        <div id="uiLayer">
+            <div id="livesDisplay"></div>
+            <div id="scoreDisplay">0</div>
+            <div id="timerContainer">
+                <div id="invisibilityTimer"> <div id="invisibilityTimerBar"></div> </div>
+                <div id="mufflerTimer"> <div id="mufflerTimerBar"></div> </div>
+                <div id="puffTimer"> <div id="puffTimerBar"></div> </div>
             </div>
-            <button id="muteButton">🔊</button>
-            
-            <div id="startModal">
-                <div class="modal-inner">
-                    <canvas id="particleCanvas"></canvas>
-                    <div class="modal-content">
-                        <h1 class="baseline-text" id="mainTitle">PUFFER</h1> 
-                        <div id="poof-line"> 
-                            <div class="logo-p-container"> 
-                                <svg id="logoPSVG" class="logo-p-svg" viewBox="10 0 100 130" xmlns="http://www.w3.org/2000/svg"> 
-                                    <defs> <radialGradient id="tridentGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#fde047; stop-opacity:1" /> <stop offset="100%" style="stop-color:#facc15; stop-opacity:1" /> </radialGradient> </defs> 
-                                    <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > P </text> 
-                                </svg> 
-                                <img src="" id="logoPuffer" alt="Puffer"> 
-                            </div> 
-                            <div class="oof-container"> 
-                                <div class="logo-o" style="background-color: #f472b6; margin-right: -8px; z-index: 2; animation-delay: -0.2s;"></div> 
-                                <div class="logo-o" style="background-color: #3b82f6; z-index: 1;"></div> 
-                                <div class="logo-f-container"> 
-                                    <svg class="logo-f-svg" viewBox="10 0 70 110" xmlns="http://www.w3.org/2000/svg"> 
-                                        <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > F </text> 
-                                    </svg> 
-                                </div> 
-                            </div> 
-                        </div>
 
-                        <h2 style="font-size: 2.2rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin: 5px 0 0 0; letter-spacing: 0.05em;">LEVEL 3</h2>
-                        
-                        <div id="instructions" style="color: white; text-align: left; padding: 0 1rem; margin-top: 0.5rem; font-family: sans-serif; letter-spacing: 0.02em; font-size: 0.85rem; line-height: 1.1; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
-                            <h3 style="font-family: 'Bangers', cursive; font-size: 1.6rem; color: #a7f3d0; text-align: center; margin-bottom: 0.2rem; letter-spacing: 0.025em;">How to Play</h3>
-                            <ul style="list-style: none; padding-left: 0;">
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎯</span> <span>Pop <strong>30 Bubbles</strong> to win!</span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">💖</span> <span>Catch <strong>Hearts</strong> to regain lives (Max 3).</span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">👻</span> <span>Invisibility hides you from <strong>all animals!</strong></span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">⭐</span> <span>Star protects from <strong>all animals!</strong></span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎈</span> <span><strong>NEVER</strong> touch <strong>Spikey Balloons!</strong></span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🐬</span> <span>Avoid the <strong>Dolphins!</strong></span> </li>
-                                <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🐢</span> <span>Watch out for <strong>Turtles!</strong></span> </li>
-                            </ul>
+            <div id="paywallModal">
+                <h2 class="modal-title">UNLOCK<br>PRO</h2>
+                <p class="modal-text" style="font-size: 1.8rem; line-height: 1.2;">Level 3 Reached!</p>
+                <p class="modal-text">Unlock all 9 levels and the Infinity Mode for a one-time purchase.</p>
+                <button id="confirmPurchaseButton" class="modal-button" onclick="triggerPlayStoreBilling()">Unlock Game - &euro;2.99</button>
+                <a href="index.html" class="back-button" style="display:block; margin-top: 20px;">Back to Menu</a>
+            </div>
+
+            <div id="levelCompleteModal">
+                <h2 class="modal-title">LEVEL 3<br>COMPLETE!</h2>
+                <p class="modal-text">Amazing! The challenges get tougher from here.</p>
+                <a href="pp4.html" class="modal-button" id="nextLevelButton">Go to Level 4</a>
+            </div>
+
+            <div id="proWelcomeMessage">
+                <h2 style="font-family: 'Bangers', cursive; font-size: 2.8rem; color: #fde047; margin: 0; text-shadow: 2px 2px 0px rgba(0,0,0,0.4);">PRO UNLOCKED!</h2>
+                <p style="font-family: sans-serif; font-size: 1.2rem; color: white; margin-top: 0.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); font-weight: bold;">Thank you for your purchase.</p>
+            </div>
+        </div>
+        <button id="muteButton">🔊</button>
+
+        <div id="startModal">
+            <div class="modal-inner">
+                <canvas id="particleCanvas"></canvas>
+                <div class="modal-content">
+                    <h1 class="baseline-text" id="mainTitle">PUFFER</h1>
+                    <div id="poof-line">
+                        <div class="logo-p-container">
+                            <svg id="logoPSVG" class="logo-p-svg" viewBox="10 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                                <defs> <radialGradient id="tridentGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:#fde047; stop-opacity:1" /> <stop offset="100%" style="stop-color:#facc15; stop-opacity:1" /> </radialGradient> </defs>
+                                <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > P </text>
+                            </svg>
+                            <img src="" id="logoPuffer" alt="Puffer">
                         </div>
-                        <button id="startButton">Start Level 3</button>
-                        <div class="back-button" onclick="window.location.href='index.html'">Back to Menu</div>
+                        <div class="oof-container">
+                            <div class="logo-o" style="background-color: #f472b6; margin-right: -8px; z-index: 2; animation-delay: -0.2s;"></div>
+                            <div class="logo-o" style="background-color: #3b82f6; z-index: 1;"></div>
+                            <div class="logo-f-container">
+                                <svg class="logo-f-svg" viewBox="10 0 70 110" xmlns="http://www.w3.org/2000/svg">
+                                    <text font-family="Bangers, cursive" font-size="128px" x="0" y="108" fill="url(#tridentGradient)" stroke="#082f49" stroke-width="9" stroke-linejoin="round" > F </text>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
+
+                    <h2 style="font-size: 2.2rem; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin: 5px 0 0 0; letter-spacing: 0.05em;">LEVEL 3</h2>
+
+                    <div id="instructions" style="color: white; text-align: left; padding: 0 1rem; margin-top: 0.5rem; font-family: sans-serif; letter-spacing: 0.02em; font-size: 0.85rem; line-height: 1.1; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                        <h3 style="font-family: 'Bangers', cursive; font-size: 1.6rem; color: #a7f3d0; text-align: center; margin-bottom: 0.2rem; letter-spacing: 0.025em;">How to Play</h3>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎯</span> <span>Pop <strong>30 Bubbles</strong> to win!</span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">💖</span> <span>Catch <strong>Hearts</strong> to regain lives (Max 3).</span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">👻</span> <span>Invisibility hides you from <strong>all animals!</strong></span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">⭐</span> <span>Star protects from <strong>all animals!</strong></span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🎈</span> <span><strong>NEVER</strong> touch <strong>Spikey Balloons!</strong></span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🐬</span> <span>Avoid the <strong>Dolphins!</strong></span> </li>
+                            <li style="margin-bottom: 0.15rem; display: flex; align-items: center;"> <span style="font-size: 1rem; margin-right: 0.5rem; width: 25px; text-align: center;">🐢</span> <span>Watch out for <strong>Turtles!</strong></span> </li>
+                        </ul>
+                        <div style="text-align: center; font-size: 0.85rem; margin-top: 0.75rem; color: #a7f3d0; font-family: 'Bangers', cursive; letter-spacing: 0.08em; opacity: 0.9;">"do-do play-play"</div>
+                    </div>
+                    <button id="startButton">Start Level 3</button>
+                    <div class="back-button" onclick="window.location.href='index.html'">Back to Menu</div>
                 </div>
             </div>
         </div>
-    </div> 
+    </div>
+</div>
 <script>
-    // --- FREEMIUM PROTOCOL: Play Store Billing Bridge ---
+    // --- Global Pro Gate Controllers ---
+    window.unlockProMode = function() {
+        const wasLocked = localStorage.getItem('puffer_pro_unlocked') !== 'true';
+        localStorage.setItem('puffer_pro_unlocked', 'true');
+        const p = document.getElementById('paywallModal');
+        const s = document.getElementById('startModal');
+        if (p) p.style.display = 'none';
+        if (s) s.style.display = 'flex';
+
+        if (wasLocked) {
+            const welcomeMsg = document.getElementById('proWelcomeMessage');
+            if(welcomeMsg) {
+                welcomeMsg.style.display = 'block';
+                setTimeout(() => {
+                    welcomeMsg.style.display = 'none';
+                }, 4000);
+            }
+        }
+    };
+
+    window.lockProMode = function() {
+        localStorage.removeItem('puffer_pro_unlocked');
+        const p = document.getElementById('paywallModal');
+        const s = document.getElementById('startModal');
+        if (s) s.style.display = 'none';
+        if (p) p.style.display = 'flex';
+    };
+
+    // --- Strict Native Billing Protocol ---
     function triggerPlayStoreBilling() {
-        console.log("Triggering Play Store Billing API for SKU: puffer_pro_unlock_299");
-        setTimeout(() => {
-            alert("Payment Successful! Pro Mode Unlocked.");
-            localStorage.setItem('puffer_pro_unlocked', 'true');
-            location.reload(); 
-        }, 1000);
+        if (typeof Android !== 'undefined') {
+            if (typeof Android.triggerPurchase === 'function') {
+                Android.triggerPurchase();
+            } else {
+                alert("Billing bridge is loading. Please check your connection or restart the app.");
+            }
+        } else {
+            alert("Pro Version required. Please download Puffer Poof on Google Play to unlock the full game.");
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Gatekeeper Check ---
-        const isProUnlocked = localStorage.getItem('puffer_pro_unlocked') === 'true';
-        
-        // --- Core Game Setup ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let canvasWidth, canvasHeight;
 
-        // --- Game State ---
         let gameRunning = false;
         let score = 0;
         let isMuted = false;
         const CURRENT_LEVEL = 3;
-        const LEVEL_COMPLETE_SCORE = 30; 
+        const LEVEL_COMPLETE_SCORE = 30;
         let lives = 3;
-        const MAX_EARNED_LIVES = 3; 
+        const MAX_EARNED_LIVES = 3;
 
-        // --- Level 3 Settings ---
         const LEVEL_SETTINGS = {
             bubbleSpeed: 0.8,
             redBalloonSpeed: 1.0,
@@ -174,26 +207,23 @@
             bubbleSpawnRate: 110,
             redBalloonSpawnRate: 160,
             powerUpSpawnRate: 270,
-            dolphinSpawnRate: 110, 
-            heartBalloonSpawnRate: 900, 
-            turtleSpawnRate: 200 
+            dolphinSpawnRate: 110,
+            heartBalloonSpawnRate: 900,
+            turtleSpawnRate: 200
         };
 
-        // --- Player State ---
         let player = {
             x: 0, y: 0, targetX: 0, radius: 20, isPuffed: false,
             puffTimer: 0, puffDuration: 7000,
             hasMuffler: false, mufflerTimer: 0, mufflerDuration: 10000,
-            targetY: 0, baseY: 0, lerpFactor: 0.2, 
-            isInvincible: false, invincibleTimer: 0, invincibleDuration: 3000, 
+            targetY: 0, baseY: 0, lerpFactor: 0.2,
+            isInvincible: false, invincibleTimer: 0, invincibleDuration: 3000,
             isInvisible: false, invisibleTimer: 0, invisibleDuration: 5000
         };
 
-        // --- Game Objects ---
         let bubbles = [], redBalloons = [], powerUps = [], dolphins = [], particles = [], heartBalloons = [], turtles = [];
         let frame = 0;
 
-        // --- DOM Elements ---
         const startModal = document.getElementById('startModal');
         const paywallModal = document.getElementById('paywallModal');
         const startButton = document.getElementById('startButton');
@@ -209,28 +239,32 @@
         const levelCompleteModal = document.getElementById('levelCompleteModal');
         const logoPuffer = document.getElementById('logoPuffer');
 
-        // --- Pure Web Audio API Pipeline ---
         let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let bgmBuffer = null;
         let bgmSource = null;
         let bgmGain = null;
 
         function loadAudioData() {
-            const cacheBuster = Date.now();
-            const request = new XMLHttpRequest();
-            request.open('GET', `pp_music/${CURRENT_LEVEL}.mp3?nocache=${cacheBuster}`, true);
-            request.responseType = 'arraybuffer';
-            request.onload = function() {
-                audioCtx.decodeAudioData(request.response, function(buffer) {
-                    bgmBuffer = buffer;
-                    if (gameRunning && !bgmSource) {
-                        startBGM();
+            try {
+                const cacheBuster = Date.now();
+                const request = new XMLHttpRequest();
+                request.open('GET', `pp_music/${CURRENT_LEVEL}.mp3?nocache=${cacheBuster}`, true);
+                request.responseType = 'arraybuffer';
+                request.onload = function() {
+                    if (request.status === 200 || request.status === 0) {
+                        if(request.response) {
+                            audioCtx.decodeAudioData(request.response, function(buffer) {
+                                bgmBuffer = buffer;
+                                if (gameRunning && !bgmSource) {
+                                    startBGM();
+                                }
+                            }, function(e) {});
+                        }
                     }
-                }, function(e) {
-                    console.error("Audio Decode Error. MP3 format unsupported by device.", e);
-                });
-            };
-            request.send();
+                };
+                request.onerror = function() {};
+                request.send();
+            } catch (e) {}
         }
         loadAudioData();
 
@@ -257,18 +291,18 @@
 
         function startBGM() {
             if (!audioCtx || !bgmBuffer) return;
-            
+
             if (bgmSource) {
                 try { bgmSource.stop(); bgmSource.disconnect(); } catch(e){}
             }
-            
+
             bgmSource = audioCtx.createBufferSource();
             bgmSource.buffer = bgmBuffer;
             bgmSource.loop = true;
-            
+
             bgmGain = audioCtx.createGain();
             bgmGain.gain.value = isMuted ? 0 : 0.4;
-            
+
             bgmSource.connect(bgmGain);
             bgmGain.connect(audioCtx.destination);
             bgmSource.start(0);
@@ -304,9 +338,7 @@
                         gainNode.disconnect();
                     } catch(e) {}
                 }, (duration * 1000) + 100);
-            } catch(e) {
-                console.log("SFX engine skipped");
-            }
+            } catch(e) {}
         }
 
         const playPopSound = () => createSound('sine', 440, 0.1);
@@ -315,8 +347,7 @@
         const playInvisibilitySound = () => { createSound('sine', 880, 0.05); setTimeout(() => createSound('sine', 1046, 0.1), 50); };
         const playHeartSound = () => { createSound('sine', 587, 0.1); setTimeout(() => createSound('sine', 880, 0.15), 100); };
         const playLevelWinSound = () => { createSound('sine', 523, 0.1); setTimeout(() => createSound('sine', 659, 0.1), 100); setTimeout(() => createSound('sine', 784, 0.1), 200); setTimeout(() => createSound('sine', 1046, 0.2), 300); };
-        
-        // --- Player SVGs ---
+
         const playerSVG = (isPuffed, hasMuffler) => {
             const bodyRadius = isPuffed ? 11 : 8;
             const bodyColor = "#facc15"; const bodyStroke = "#082f49";
@@ -337,7 +368,6 @@
             logoPuffer.src = playerImageNormal.src;
         }
 
-        // --- Item SVGs ---
         const bubbleSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="bubbleGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%"> <stop offset="0%" style="stop-color:rgba(255,255,255,0.7); stop-opacity:1" /> <stop offset="100%" style="stop-color:rgba(255,255,255,0); stop-opacity:1" /> </radialGradient> </defs> <circle cx="20" cy="20" r="18" fill="rgba(200, 230, 255, 0.4)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/> <circle cx="20" cy="20" r="18" fill="url(#bubbleGrad)"/> <path d="M 12 12 C 15 14, 20 18, 22 22 C 21 16, 16 12, 12 12 Z" fill="rgba(255, 255, 255, 0.7)" /> </svg>`;
         const bubbleImage = new Image(); bubbleImage.src = `data:image/svg+xml;base64,${btoa(bubbleSVG())}`;
         const redBalloonSVG = () => ` <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"> <defs> <radialGradient id="redBalloonGrad" cx="50%" cy="40%" r="40%"> <stop offset="0%" stop-color="rgba(255,200,200,0.7)"/> <stop offset="100%" stop-color="rgba(255,255,255,0)"/> </radialGradient> </defs> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2" transform="translate(0 -3)"/> <path d="M20,5 C31.046,5 40,12.954 40,23 C40,33.046 31.046,40 20,40 C8.954,40 0,33.046 0,23 C0,12.954 8.954,5 20,5 Z" fill="url(#redBalloonGrad)" transform="translate(0 -3)"/> <g stroke="#b91c1c" stroke-width="2" stroke-linecap="round"> <line x1="20" y1="0" x2="20" y2="4" /> <line x1="6" y1="6" x2="9" y2="9" /> <line x1="34" y1="6" x2="31" y2="9" /> <line x1="0" y1="20" x2="4" y2="20" /> <line x1="40" y1="20" x2="36" y2="20" /> </g> </svg>`;
@@ -355,7 +385,6 @@
         const turtleSVG = () => `<svg width="80" height="60" viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(0 5)"> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30 Z" fill="#166534" stroke="#14532d" stroke-width="3" stroke-linejoin="round"/> <path d="M 20 30 C 5 40, 5 20, 20 10 C 35 0, 45 0, 60 10 C 75 20, 75 40, 60 30" stroke="#fde047" stroke-width="1" fill="none" opacity="0.5"/> <path d="M 40 5 C 30 15, 30 25, 40 30 C 50 25, 50 15, 40 5" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 25 12 C 18 18, 18 25, 25 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <path d="M 55 12 C 62 18, 62 25, 55 30" fill="#15803d" stroke="#14532d" stroke-width="1.5"/> <circle cx="70" cy="20" r="8" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <circle cx="73" cy="18" r="1.5" fill="black"/> <path d="M 15 25 C 0 20, 0 35, 15 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 60 25 C 75 20, 75 35, 60 30" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 20 30 C 10 45, 20 45, 25 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> <path d="M 55 30 C 65 45, 55 45, 50 32" fill="#16a34a" stroke="#14532d" stroke-width="2"/> </g> </svg>`;
         const turtleImage = new Image(); turtleImage.src = `data:image/svg+xml;base64,${btoa(turtleSVG())}`;
 
-        // --- Pop Particle Class ---
         class PopParticle {
             constructor(x, y, color) { this.x = x; this.y = y; this.size = Math.random() * 10 + 5; this.speedX = Math.random() * 6 - 3; this.speedY = Math.random() * -3 - 1; this.color = color; this.life = 100; this.gravity = 0.1; this.opacity = 1; }
             update() { this.x += this.speedX; this.y += this.speedY; this.speedY += this.gravity; this.life -= 2; this.opacity = this.life / 100; }
@@ -363,7 +392,6 @@
         }
         function createPopEffect(x, y, color) { playPopSound(); let particleColor = 'rgba(200, 230, 255, 0.7)'; for (let i = 0; i < 15; i++) { particles.push(new PopParticle(x, y, particleColor)); } }
 
-        // --- Game Mechanics ---
         function resizeCanvas() {
             canvasWidth = window.innerWidth;
             canvasHeight = window.innerHeight;
@@ -379,44 +407,44 @@
         }
         function updateScore(points) { score += points; scoreDisplay.textContent = score; }
         function updateLivesDisplay() { livesDisplay.textContent = '❤️'.repeat(lives); }
-        
+
         function resetGame() {
             score = 0; lives = 3; frame = 0;
             bubbles = []; redBalloons = []; powerUps = []; dolphins = []; particles = []; heartBalloons = []; turtles = [];
             player.isPuffed = false; player.hasMuffler = false; player.isInvisible = false;
             player.puffTimer = 0; player.mufflerTimer = 0; player.invisibleTimer = 0;
-            
-            if(player.baseY) { 
-                player.targetY = player.baseY; player.y = player.baseY; 
-            } else { 
-                resizeCanvas(); 
-                player.x = canvasWidth / 2; player.targetX = canvasWidth / 2; 
-                player.targetY = player.baseY; player.y = player.baseY; 
+
+            if(player.baseY) {
+                player.targetY = player.baseY; player.y = player.baseY;
+            } else {
+                resizeCanvas();
+                player.x = canvasWidth / 2; player.targetX = canvasWidth / 2;
+                player.targetY = player.baseY; player.y = player.baseY;
             }
-            
+
             player.isInvincible = false; player.invincibleTimer = 0;
             updateScore(0); updateLivesDisplay();
             puffTimer.style.display = 'none'; invisibilityTimer.style.display = 'none'; mufflerTimer.style.display = 'none';
             levelCompleteModal.style.display = 'none';
         }
-        
+
         function startGame() {
             unlockAudio();
             resetGame();
             gameRunning = true;
             startModal.style.display = 'none';
-            
+
             if (bgmBuffer) {
                 startBGM();
             }
-            
+
             gameLoop();
         }
-        
+
         function gameOver() {
             gameRunning = false;
             stopBGM();
-            
+
             const mainTitle = document.getElementById('mainTitle');
             if(mainTitle) {
                 mainTitle.innerHTML = 'GAME<br>OVER';
@@ -424,7 +452,7 @@
                 mainTitle.style.textShadow = '4px 4px 0px #7f1d1d, 0 0 20px #ef4444';
                 mainTitle.style.fontSize = '5rem';
             }
-            
+
             const poofLine = document.getElementById('poof-line');
             if(poofLine) poofLine.style.display = 'none';
 
@@ -436,10 +464,10 @@
                 btn.textContent = "Retry Level 3";
                 btn.onclick = () => { window.location.href = 'pp3.html'; };
             }
-            
+
             startModal.style.display = 'flex';
         }
-        
+
         function levelComplete() {
             gameRunning = false;
             playLevelWinSound();
@@ -452,11 +480,10 @@
             lives--;
             updateLivesDisplay();
             playMineSound();
-            if (lives <= 0) { gameOver(); } 
+            if (lives <= 0) { gameOver(); }
             else { player.isInvincible = true; player.invincibleTimer = player.invincibleDuration; }
         }
-        
-        // --- Spawning Logic ---
+
         function spawnObjects() {
             if (frame % LEVEL_SETTINGS.bubbleSpawnRate === 0) {
                 const size = Math.random() * 15 + 15;
@@ -472,19 +499,18 @@
                 else { type = 2; img = yellowFlowerImage; }
                 powerUps.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: img, type: type, speed: (LEVEL_SETTINGS.powerUpSpeed + Math.random() * 0.5) });
             }
-            const dangerZoneMaxY = canvasHeight * 0.60; 
+            const dangerZoneMaxY = canvasHeight * 0.60;
             if (frame % LEVEL_SETTINGS.dolphinSpawnRate === 0) {
                 dolphins.push({ x: -100, y: Math.random() * dangerZoneMaxY, radius: 35, img: dolphinImage, speed: (Math.random() * 2 + 2) });
             }
-            if (frame % LEVEL_SETTINGS.heartBalloonSpawnRate === 0) { 
+            if (frame % LEVEL_SETTINGS.heartBalloonSpawnRate === 0) {
                 heartBalloons.push({ x: Math.random() * canvasWidth, y: canvasHeight + 40, radius: 20, img: heartBalloonImage, speed: LEVEL_SETTINGS.powerUpSpeed });
             }
-            if (frame % LEVEL_SETTINGS.turtleSpawnRate === 0) { 
+            if (frame % LEVEL_SETTINGS.turtleSpawnRate === 0) {
                 turtles.push({ x: -100, y: Math.random() * dangerZoneMaxY, radius: 30, img: turtleImage, speed: ((LEVEL_SETTINGS.redBalloonSpeed * 0.8) + Math.random() * 0.5) });
             }
         }
-        
-        // --- updatePlayer ---
+
         function updatePlayer() {
             if (isNaN(player.x) || !isFinite(player.x)) player.x = canvasWidth / 2;
             if (isNaN(player.y) || !isFinite(player.y)) player.y = player.baseY;
@@ -494,14 +520,14 @@
             player.x += (player.targetX - player.x) * player.lerpFactor;
             const bobble = Math.sin(frame * 0.05) * 3;
             const baseY = player.baseY + bobble;
-            
-            if (player.hasMuffler) { 
-                player.y += (player.targetY - player.y) * player.lerpFactor; 
-            } else { 
-                player.y += (baseY - player.y) * player.lerpFactor; 
-                player.targetY = baseY; 
+
+            if (player.hasMuffler) {
+                player.y += (player.targetY - player.y) * player.lerpFactor;
+            } else {
+                player.y += (baseY - player.y) * player.lerpFactor;
+                player.targetY = baseY;
             }
-            
+
             if (player.isPuffed) {
                 player.puffTimer -= 1000 / 60;
                 puffTimerBar.style.width = `${(player.puffTimer / player.puffDuration) * 100}%`;
@@ -523,10 +549,9 @@
             }
         }
 
-        // --- updateObjects (Collision Logic) ---
         function updateObjects() {
             const playerHitbox = { x: player.x, y: player.y, radius: player.radius };
-            
+
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 bubbles[i].y -= bubbles[i].speed; bubbles[i].x += Math.sin(frame * bubbles[i].wobbleSpeed) * bubbles[i].wobble;
                 if (bubbles[i].y < -50) { bubbles.splice(i, 1); continue; }
@@ -553,8 +578,8 @@
                 powerUps[i].y -= powerUps[i].speed;
                 if (powerUps[i].y < -40) { powerUps.splice(i, 1); continue; }
                 if (checkCollision(playerHitbox, powerUps[i])) {
-                    if (powerUps[i].type === 0) { playPowerUpSound(); player.isPuffed = true; player.puffTimer = player.puffDuration; puffTimer.style.display = 'block'; } 
-                    else if (powerUps[i].type === 1) { playPowerUpSound(); player.hasMuffler = true; player.mufflerTimer = player.mufflerDuration; mufflerTimer.style.display = 'block'; } 
+                    if (powerUps[i].type === 0) { playPowerUpSound(); player.isPuffed = true; player.puffTimer = player.puffDuration; puffTimer.style.display = 'block'; }
+                    else if (powerUps[i].type === 1) { playPowerUpSound(); player.hasMuffler = true; player.mufflerTimer = player.mufflerDuration; mufflerTimer.style.display = 'block'; }
                     else if (powerUps[i].type === 2) { playInvisibilitySound(); player.isInvisible = true; player.invisibleTimer = player.invisibleDuration; invisibilityTimer.style.display = 'block'; }
                     powerUps.splice(i, 1);
                 }
@@ -569,10 +594,9 @@
             }
             for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); if (particles[i].life <= 0) { particles.splice(i, 1); } }
         }
-        
+
         function checkCollision(obj1, obj2) { const dx = obj1.x - obj2.x; const dy = obj1.y - obj2.y; const distance = Math.sqrt(dx * dx + dy * dy); return distance < obj1.radius + obj2.radius; }
 
-        // --- Draw Function ---
         function draw() {
             if (!ctx) return;
             ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -587,12 +611,12 @@
             if (player.isPuffed && player.hasMuffler) currentImage = playerImagePuffedMuffler;
             else if (player.isPuffed) currentImage = playerImagePuffed;
             else if (player.hasMuffler) currentImage = playerImageMuffler;
-            
+
             ctx.save();
-            if (player.isInvincible) { if (frame % 10 < 5) { ctx.globalAlpha = 0.5; } } 
-            else if (player.isInvisible) { ctx.globalAlpha = 0.35; } 
+            if (player.isInvincible) { if (frame % 10 < 5) { ctx.globalAlpha = 0.5; } }
+            else if (player.isInvisible) { ctx.globalAlpha = 0.35; }
             else if (player.hasMuffler) { ctx.globalAlpha = (Math.sin(frame * 0.5) * 0.3) + 0.7; }
-            
+
             const drawSize = 80;
             ctx.drawImage(currentImage, player.x - (drawSize/2), player.y - (drawSize/2), drawSize, drawSize);
             ctx.restore();
@@ -606,29 +630,28 @@
             frame++; requestAnimationFrame(gameLoop);
         }
 
-        // --- Event Listeners and Universal Input Firewall ---
-        function setTargetPos(x, y) { 
+        function setTargetPos(x, y) {
             if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y)) return;
             const rect = canvas.getBoundingClientRect();
             if (!rect || rect.width === 0 || rect.height === 0) return;
-            
+
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
 
             const finalX = (x - rect.left) * scaleX;
             const finalY = (y - rect.top) * scaleY;
 
-            if (isFinite(finalX)) player.targetX = finalX; 
-            if (player.hasMuffler && isFinite(finalY)) player.targetY = finalY; 
-        } 
+            if (isFinite(finalX)) player.targetX = finalX;
+            if (player.hasMuffler && isFinite(finalY)) player.targetY = finalY;
+        }
 
         function handleInput(e) {
             if (e.cancelable) e.preventDefault();
-            
+
             if (e.type === 'pointerdown' && audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            
+
             if (e.touches && e.touches.length > 0) {
                 setTargetPos(e.touches.clientX, e.touches.clientY);
             } else if (e.clientX !== undefined) {
@@ -645,63 +668,63 @@
             canvas.addEventListener('pointermove', handleInput, { passive: false });
             canvas.addEventListener('touchstart', handleInput, { passive: false });
             canvas.addEventListener('touchmove', handleInput, { passive: false });
-            
+
             startButton.addEventListener('click', () => { startGame(); });
-            
-            muteButton.addEventListener('click', (e) => { 
+
+            muteButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                isMuted = !isMuted; 
-                muteButton.textContent = isMuted ? '🔇' : '🔊'; 
+                isMuted = !isMuted;
+                muteButton.textContent = isMuted ? '🔇' : '🔊';
                 if (bgmGain && audioCtx) {
                     bgmGain.gain.setTargetAtTime(isMuted ? 0 : 0.4, audioCtx.currentTime, 0.1);
                 }
             });
-            
-            window.addEventListener('resize', resizeCanvas);
-            
-            // --- Logo Particle System Setup ---
-            const particleCanvas = document.getElementById('particleCanvas'); 
-            const pCtx = particleCanvas.getContext('2d'); 
-            let logoParticles = []; 
-            let pCanvasWidth, pCanvasHeight; 
 
-            function resizeParticleCanvas() { 
-                const modal = particleCanvas.parentElement; 
+            window.addEventListener('resize', resizeCanvas);
+
+            const particleCanvas = document.getElementById('particleCanvas');
+            const pCtx = particleCanvas.getContext('2d');
+            let logoParticles = [];
+            let pCanvasWidth, pCanvasHeight;
+
+            function resizeParticleCanvas() {
+                const modal = particleCanvas.parentElement;
                 if (!modal) return;
-                pCanvasWidth = modal.clientWidth; 
-                pCanvasHeight = modal.clientHeight; 
-                if(pCanvasWidth === 0 || pCanvasHeight === 0) { 
-                    const tempModal = document.querySelector("#startModal .modal-inner"); 
-                    if(tempModal) { 
-                        pCanvasWidth = tempModal.clientWidth; 
-                        pCanvasHeight = tempModal.clientHeight; 
-                    } 
-                } 
-                if (pCtx) { 
-                    particleCanvas.width = pCanvasWidth; 
-                    particleCanvas.height = pCanvasHeight; 
-                } 
-            } 
-            class LogoParticle { constructor() { this.x = Math.random() * pCanvasWidth; this.y = pCanvasHeight + Math.random() * 50; this.radius = Math.random() * 3 + 1; this.speed = Math.random() * 1 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.y -= this.speed; if (this.y < -this.radius) { this.y = pCanvasHeight + this.radius; this.x = Math.random() * pCanvasWidth; } } draw() { if (!pCtx) return; pCtx.beginPath(); pCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; pCtx.fill(); } } 
-            function initParticles() { resizeParticleCanvas(); logoParticles = []; for (let i = 0; i < 20; i++) { logoParticles.push(new LogoParticle()); } } 
-            let particleAnimationId; 
-            function animateParticles() { 
-                if (!pCtx) return; 
-                pCtx.clearRect(0, 0, pCanvasWidth, pCanvasHeight); 
-                logoParticles.forEach(p => { p.update(); p.draw(); }); 
-                particleAnimationId = requestAnimationFrame(animateParticles); 
-            } 
-            
-            setTimeout(() => { 
-                initParticles(); 
-                animateParticles(); 
+                pCanvasWidth = modal.clientWidth;
+                pCanvasHeight = modal.clientHeight;
+                if(pCanvasWidth === 0 || pCanvasHeight === 0) {
+                    const tempModal = document.querySelector("#startModal .modal-inner");
+                    if(tempModal) {
+                        pCanvasWidth = tempModal.clientWidth;
+                        pCanvasHeight = tempModal.clientHeight;
+                    }
+                }
+                if (pCtx) {
+                    particleCanvas.width = pCanvasWidth;
+                    particleCanvas.height = pCanvasHeight;
+                }
+            }
+            class LogoParticle { constructor() { this.x = Math.random() * pCanvasWidth; this.y = pCanvasHeight + Math.random() * 50; this.radius = Math.random() * 3 + 1; this.speed = Math.random() * 1 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.y -= this.speed; if (this.y < -this.radius) { this.y = pCanvasHeight + this.radius; this.x = Math.random() * pCanvasWidth; } } draw() { if (!pCtx) return; pCtx.beginPath(); pCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); pCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; pCtx.fill(); } }
+            function initParticles() { resizeParticleCanvas(); logoParticles = []; for (let i = 0; i < 20; i++) { logoParticles.push(new LogoParticle()); } }
+            let particleAnimationId;
+            function animateParticles() {
+                if (!pCtx) return;
+                pCtx.clearRect(0, 0, pCanvasWidth, pCanvasHeight);
+                logoParticles.forEach(p => { p.update(); p.draw(); });
+                particleAnimationId = requestAnimationFrame(animateParticles);
+            }
+
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
             }, 100);
 
-            // Gate Logic Execution
+            // True Gate Execution Check
+            const isProUnlocked = localStorage.getItem('puffer_pro_unlocked') === 'true';
             if (isProUnlocked) {
-                startModal.style.display = 'flex';
+                window.unlockProMode();
             } else {
-                paywallModal.style.display = 'flex';
+                window.lockProMode();
             }
         }
         
